@@ -140,11 +140,12 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
     table.insert(entries, {
       value = "",
       ordinal = "empty",
-      display = "[mygrep] Keine gespeicherten Suchanfragen",
+      display = "[mygrep] Keine gespeicherten Suchanfragen", --REF: english!
+      display_highlights = {
+        { 0, 35, "Comment" }
+      }
     })
   end
-
-
 
   pickers.new({}, {
     prompt_title = title .. " History",
@@ -180,6 +181,20 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
       map("i", "<Tab>", function()
         local sel = action_state.get_selected_entry()
         if not sel or not sel.value then return end
+
+        -- Check if next toggle would remove query from history and persistent
+        local is_persistent = vim.tbl_contains(state.persist or {}, sel.value)
+        if is_persistent then
+          vim.ui.input({ prompt = "[mygrep] Do you wan't remove the query from history? [y/n]: " }, function(answer)
+            if answer == "y" then
+              history.toggle_state(state, sel.value)
+              history.save(tool, state)
+              M.open_history_picker(tool, title, callback, state, last_prompt)
+            end
+          end)
+          return
+        end
+
         history.toggle_state(state, sel.value)
         history.save(tool, state)
         M.open_history_picker(tool, title, callback, state, last_prompt)
