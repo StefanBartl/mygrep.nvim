@@ -40,6 +40,12 @@ function M.open()
     return
   end
 
+  table.sort(state.tools, function(a, b)
+    if a == "live_grep" then return true end
+    if b == "live_grep" then return false end
+    return a < b
+  end)
+
   local lines = vim.tbl_map(function(t) return "  🔍  " .. t end, state.tools)
 
   state.buf = api.nvim_create_buf(false, true)

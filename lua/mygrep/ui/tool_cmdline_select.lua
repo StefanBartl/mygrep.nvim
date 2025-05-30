@@ -17,6 +17,12 @@ function M.open()
     return
   end
 
+  table.sort(tools, function(a, b)
+    if a == "live_grep" then return true end
+    if b == "live_grep" then return false end
+    return a < b
+  end)
+
   vim.ui.select(tools, {
     prompt = "MyGrep - Select Tool",
     format_item = function(item) return item end,
