@@ -29,9 +29,9 @@ KEYBINDINGS
 
 Default normal-mode mappings (see |mygrep.keymaps|):
 
-    <leader>lg     Run live_grep
-    <leader>fg     Run multigrep
-    <leader>gr     Open interactive tool selector (same as :Mygrep)
+    <leader><leader>    Open interactive tool selector (same as :Mygrep)
+    <leader>ml          Run live_grep
+    <leader>mg          Run multigrep
 
 ==============================================================================
 PICKER INTERACTIONS                                                *mygrep-picker*
@@ -46,7 +46,7 @@ When inside a grep picker (e.g., live_grep):
 In the history picker:
 
 - <Tab>      Toggle state:
-               → [S] →  (Favorite)
+               → S →  (Favorite)
                →  →  (Persistent)
                →  → remove
 - <C-d>      Remove query from history entirely
@@ -85,8 +85,13 @@ INTERNAL MODULES
 ==============================================================================
 CREDITS
 
-Created by Steve / ChatGPT
+Created by Stefan Bartl
 Inspired by Telescope.nvim
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
+"""
+
+output_path = Path("/mnt/data/mygrep.txt")
+output_path.write_text(help_text, encoding="utf-8")
+output_path.name

@@ -14,17 +14,17 @@ local function map(mode, lhs, rhs, desc)
 end
 
 -- Tool Picker via <leader>gr
-vim.keymap.set("n", "<leader>gr", function()
+vim.keymap.set("n", "<leader><leader>", function()
   require("mygrep.ui.tool_picker").open()
 end, { desc = "Open tool selector (floating)" })
 
 -- 🔍 Tool Launch Shortcuts
-map("n", "<leader>lg", function()
+map("n", "<leader>ml", function()
   local tool = registry.get("live_grep")
   if tool then tool.run() end
 end, "[mygrep] Run live_grep")
 
-map("n", "<leader>fg", function()
+map("n", "<leader>mm", function()
   local tool = registry.get("multigrep")
   if tool then tool.run() end
 end, "[mygrep] Run multigrep")
