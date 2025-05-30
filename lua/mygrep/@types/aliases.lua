@@ -7,6 +7,7 @@
 
 ---Plugin-wide configuration options
 ---@alias ConfigOptions table<string, any>
+---@alias Keymaps table<string, string|false>
 
 ---Defines which UI to use for selecting tools:
 ---"ui"     => floating window buffer (default)

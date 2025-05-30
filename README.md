@@ -36,13 +36,27 @@
     require("mygrep").setup()
   end,
 }
-````
+```
 
-To use command-line style picker instead of floating UI:
+This installs `mygrep.nvim` with the default floating UI tool selector.
+
+If you prefer a minimal **command-line style** selector (`vim.ui.select`), configure it like this:
 
 ```lua
 require("mygrep").setup({
-  tool_picker_style = "select"
+  tool_picker_style = "select",
+})
+```
+
+To override default keymaps (e.g. use `<leader>gr` instead of `<leader><leader>`):
+
+```lua
+require("mygrep").setup({
+  keymaps = {
+    open = "<leader>gr",
+    live_grep = "<leader>ml",
+    multigrep = "<leader>mm",
+  },
 })
 ```
 
@@ -50,11 +64,11 @@ require("mygrep").setup({
 
 ## Default Keymaps
 
-| Mapping      | Description                           |
-| ------------ | ------------------------------------- |
-| `<leader>lg` | Run live\_grep                        |
-| `<leader>fg` | Run multigrep                         |
-| `<leader>gr` | Tool selector (UI or `vim.ui.select`) |
+| Mapping            | Description                           |
+| ------------------ | ------------------------------------- |
+| `<leader><leader>` | Run live\_grep                        |
+| `<leader>ml`       | Run multigrep                         |
+| `<leader>mg`       | Tool selector (UI or `vim.ui.select`) |
 
 All picker-specific mappings are injected dynamically.
 See `:h mygrep` for full list.

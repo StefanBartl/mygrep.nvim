@@ -10,13 +10,20 @@ local M = {}
 M.options = {
   ---@type ToolPickerStyle
   tool_picker_style = "ui",
+
+  ---@type Keymaps
+  keymaps = {
+    open = "<leader><leader>",
+    live_grep = "<leader>ml",
+    multigrep = "<leader>mm",
+  },
 }
 
 ---Returns a configured option by key
 ---@param key string
----@return any
+---@return any | nil
 function M.get_option(key)
-  return M.options[key]
+  return M.options[key] or nil
 end
 
 return M

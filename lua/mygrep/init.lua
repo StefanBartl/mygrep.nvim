@@ -9,6 +9,8 @@
 --- @see mygrep.tools.live_grep
 --- @see mygrep.tools.multigrep
 
+require("mygrep.@types.aliases")
+
 -- Core
 local registry = require("mygrep.core.registry")
 local config = require("mygrep.config")
@@ -30,26 +32,34 @@ registry.register("multigrep", {
 
 -- Setup UI integrations
 require("mygrep.usercommands")
-require("mygrep.keymaps")
 
 -- Public API
 local M = {}
 
 ---Plugin setup function (called by user)
----@param opts? table<string, any>
+---@param opts ConfigOptions
 function M.setup(opts)
   if type(opts) == "table" then
     for k, v in pairs(opts) do
-      if config.options[k] ~= nil then
+      if k == "keymaps" and type(v) == "table" then
+        for name, lhs in pairs(v) do
+          if config.options.keymaps[name] ~= nil then
+            config.options.keymaps[name] = lhs
+          else
+            vim.notify("[mygrep] Unknown keymap: " .. name, vim.log.levels.WARN)
+          end
+        end
+      elseif config.options[k] ~= nil then
         config.options[k] = v
       else
         vim.notify("[mygrep] Unknown config option: " .. k, vim.log.levels.WARN)
       end
     end
   end
+
+  require("mygrep.keymaps")
 end
 
--- Optional exports (e.g. for testing or programmatic access)
 M.registry = registry
 
 return M

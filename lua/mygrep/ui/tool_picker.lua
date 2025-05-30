@@ -9,7 +9,6 @@ local selector_cmdline = require("mygrep.ui.tool_cmdline_select")
 
 function M.open()
   local style = config.get_option("tool_picker_style")
-  print("[mygrep] style resolved to:", style)
 
   if style == "ui" then
     selector_ui.open()
