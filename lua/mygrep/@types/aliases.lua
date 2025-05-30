@@ -13,16 +13,16 @@
 ---@field persist string[] Persisted queries stored on disk
 ---@field undo? string[] Optional undo stack (last removed entries)
 
----@class PickerOptions
----@field title string Title shown in Telescope prompt
----@field tool ToolName Tool identifier used for state/folder
----@field callback fun(input: string): nil Function to run search on input
----@field state ToolState Loaded or initialized state object
+---@alias PickerInternalOpts { title: string, tool: ToolName, callback: fun(...), state: ToolState, default_text?: string }
+---@alias PickerUserOpts { default_text?: string }
 
 ---@class RegistryEntry
 ---@field name ToolName
 ---@field run fun(opts?: table): nil Entry point for running the tool
 ---@field config? table Optional tool-specific config
+
+---Mapping of all registered tools
+---@alias RegistryTable table<ToolName, RegistryEntry>
 
 local M = {}
 

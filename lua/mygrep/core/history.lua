@@ -1,41 +1,49 @@
+---@module 'mygrep.core.history'
+---@brief Manages per-tool search history, favorites, and persistent queries
+---@description
+--- Each tool (e.g. `live_grep`, `multigrep`) has a dedicated memory state.
+--- Supports session-only history, favorite queries, and persistent storage on disk.
+
 local uv = vim.uv or vim.loop
 local encode = vim.json.encode
 local decode = vim.json.decode
 
 local M = {}
-M.live_grep = {
-  history = {},
-  favorites = {},
-  persist = {},
-}
-M.multigrep = {
-  history = {},
-  favorites = {},
-  persist = {},
-}
 
----@private
--- Nur gültige Strings akzeptieren
+-- Private ---------------------------------------------------------------------
+
+---Returns true if string is valid and not a Lua function keyword
+---@param s any
+---@return boolean
 local function is_valid_query(s)
-  return type(s) == "string" and s ~= ""
+  return type(s) == "string" and s ~= "" and s ~= "function"
 end
 
-
----@private
-local function tbl_indexof(t, val)
+---Returns index of value in table or -1
+---@param t any[]
+---@param val any
+---@return integer
+local function index_of(t, val)
   for i, v in ipairs(t) do
     if v == val then return i end
   end
   return -1
 end
 
----@private
+---Builds the disk path for storing persistent queries
+---@param tool ToolName
+---@return string
 local function get_storage_path(tool)
-  local dir = vim.fn.stdpath("cache") .. "/mygrep"
+  local dir = vim.fn.stdpath("data") .. "/mygrep"
   vim.fn.mkdir(dir, "p")
   return dir .. "/" .. tool .. ".json"
 end
 
+-- Public API ------------------------------------------------------------------
+
+---Returns memory state for a given tool, initializes if missing
+---@param tool ToolName
+---@return ToolState
 function M.get(tool)
   assert(type(tool) == "string", "[mygrep] tool must be a string")
 
@@ -51,56 +59,69 @@ function M.get(tool)
   return M[tool]
 end
 
+---Appends input to history if new and valid
+---@param state ToolState
+---@param input string
 function M.add_history(state, input)
-  if is_valid_query(input) and (state.history[#state.history] ~= input) then
+  if is_valid_query(input) and state.history[#state.history] ~= input then
     table.insert(state.history, input)
   end
 end
 
+---Toggles query between favorite, persistent, and none
+---@param state ToolState
+---@param query string
 function M.toggle_state(state, query)
   if not is_valid_query(query) then return end
 
-  local idx = tbl_indexof(state.favorites, query)
-  if idx ~= -1 then
-    table.remove(state.favorites, idx)
+  local fav_idx = index_of(state.favorites, query)
+  if fav_idx ~= -1 then
+    table.remove(state.favorites, fav_idx)
     table.insert(state.persist, query)
-  else
-    local persist_idx = tbl_indexof(state.persist, query)
-    if persist_idx ~= -1 then
-      table.remove(state.persist, persist_idx)
-    else
-      table.insert(state.favorites, query)
-    end
+    return
   end
+
+  local per_idx = index_of(state.persist, query)
+  if per_idx ~= -1 then
+    table.remove(state.persist, per_idx)
+    return
+  end
+
+  table.insert(state.favorites, query)
 end
 
+---Removes query from all memory categories
+---@param state ToolState
+---@param query string
 function M.remove(state, query)
   if not is_valid_query(query) then return end
+
   local function remove_from(tbl)
-    local i = tbl_indexof(tbl, query)
+    local i = index_of(tbl, query)
     if i ~= -1 then table.remove(tbl, i) end
   end
+
   remove_from(state.history)
   remove_from(state.favorites)
   remove_from(state.persist)
 end
 
+---Persists persistent queries to disk
+---@param tool ToolName
+---@param state ToolState
 function M.save(tool, state)
   local path = get_storage_path(tool)
+  local persist = vim.tbl_filter(is_valid_query, state.persist or {})
 
-  local filtered = vim.tbl_filter(is_valid_query, state.persist or {})
-  local ok, json = pcall(encode, { persist = filtered })
+  local ok, json = pcall(encode, { persist = persist })
   if not ok then
     vim.notify("[mygrep] Failed to encode JSON: " .. tostring(json), vim.log.levels.ERROR)
     return
   end
 
-  local dir = vim.fn.fnamemodify(path, ":h")
-  vim.fn.mkdir(dir, "p")
-
   local f, err = io.open(path, "w")
   if not f then
-    vim.notify("[mygrep] Failed to open file for writing: " .. err, vim.log.levels.ERROR)
+    vim.notify("[mygrep] Failed to write file: " .. err, vim.log.levels.ERROR)
     return
   end
 
@@ -108,15 +129,19 @@ function M.save(tool, state)
   f:close()
 end
 
+---Loads persisted queries from disk into memory state
+---@param tool ToolName
+---@param state ToolState
 function M.load(tool, state)
   local path = get_storage_path(tool)
+
   local ok, content = pcall(vim.fn.readfile, path)
   if not ok or not content then return end
 
   local decoded = decode(table.concat(content, "\n"))
-  if not decoded then return end
-
-  state.persist = vim.tbl_filter(is_valid_query, decoded.persist or {})
+  if type(decoded) == "table" and type(decoded.persist) == "table" then
+    state.persist = vim.tbl_filter(is_valid_query, decoded.persist)
+  end
 end
 
 return M

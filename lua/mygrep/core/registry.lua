@@ -1,30 +1,31 @@
 ---@module 'mygrep.core.registry'
 ---@brief Central registry for all grep tools
 ---@description
---- This module manages tool registration for mygrep.nvim.
---- Each tool registers itself with a unique name and entrypoint.
---- Consumers can then lookup and invoke tools dynamically.
+--- Provides dynamic registration and retrieval of grep tools.
+--- Tools are registered with a unique name and a run entrypoint.
+--- Other modules can lookup tools by name to invoke them generically.
 
--- System API
-local assert = assert
-
--- Utilities and Debugging
-local safe_call = require("mygrep.utils.safe_call").safe_call
-
--- Types
----@type table<string, RegistryEntry>
+---@type RegistryTable
 local tools = {}
 
 local M = {}
+
+---Validates a registry entry
+---@param entry any
+---@return boolean
+local function is_valid_entry(entry)
+  return type(entry) == "table" and type(entry.run) == "function"
+end
 
 ---Registers a new grep tool
 ---@param name ToolName
 ---@param entry RegistryEntry
 ---@return boolean, string? Error message if registration fails
 function M.register(name, entry)
-  if not name or not entry or type(entry.run) ~= "function" then
+  if type(name) ~= "string" or not is_valid_entry(entry) then
     return false, "Invalid registry entry"
   end
+
   tools[name] = entry
   return true
 end

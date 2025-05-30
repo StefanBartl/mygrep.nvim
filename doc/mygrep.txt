@@ -1,0 +1,92 @@
+*mygrep.txt*   Plugin documentation for mygrep.nvim     Last Change:  May 30, 2025
+
+==============================================================================
+INTRODUCTION                                                        *:Mygrep*
+
+mygrep.nvim is a Telescope-based grep memory layer. It allows you to use
+tools like `live_grep` or `multigrep` and automatically remembers your search
+queries, favorites, and persistent patterns – even across sessions.
+
+==============================================================================
+USAGE
+
+To run a registered grep tool:
+
+    :Mygrep <tool>
+
+If no tool is provided, a picker will show all available tools.
+
+Example:
+
+    :Mygrep live_grep
+
+Registered tools:
+- |mygrep-live_grep|
+- |mygrep-multigrep|
+
+==============================================================================
+KEYBINDINGS
+
+Default normal-mode mappings (see |mygrep.keymaps|):
+
+    <leader>lg     Run live_grep
+    <leader>fg     Run multigrep
+    <leader>gr     Open interactive tool selector (same as :Mygrep)
+
+==============================================================================
+PICKER INTERACTIONS                                                *mygrep-picker*
+
+When inside a grep picker (e.g., live_grep):
+
+- <CR>       Execute search and save query in memory
+- <C-o>      Open history picker
+- <C-n>      Next previous search (cycle through history)
+- <C-p>      Previous search (cycle through history)
+
+In the history picker:
+
+- <Tab>      Toggle state:
+               → [S] →  (Favorite)
+               →  →  (Persistent)
+               →  → remove
+- <C-d>      Remove query from history entirely
+- <Esc>      Return to main picker with restored prompt
+- <CR>       Re-run the selected query
+
+Symbol legend:
+
+            Favorite
+            Persistent (stored in JSON)
+    S         Session (in-memory only)
+
+==============================================================================
+EXTENDING
+
+To register your own tool:
+
+>lua
+  require("mygrep.core.registry").register("mytool", {
+    name = "mytool",
+    run = function()
+      -- your picker call here (e.g. require("telescope.builtin").grep_string({...}))
+    end,
+  })
+<
+
+==============================================================================
+INTERNAL MODULES
+
+- |mygrep.core.history|   Session + persistent memory storage
+- |mygrep.core.picker|    Picker interface
+- |mygrep.core.registry|  Tool registration & dispatch
+- |mygrep.tools.live_grep|
+- |mygrep.tools.multigrep|
+
+==============================================================================
+CREDITS
+
+Created by Steve / ChatGPT
+Inspired by Telescope.nvim
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:

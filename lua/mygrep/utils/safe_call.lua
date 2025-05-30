@@ -1,26 +1,26 @@
 ---@module 'mygrep.utils.safe_call'
----@brief Provides a safe wrapper around pcall() with structured result
+---@brief Provides a structured wrapper around pcall()
 ---@description
---- This module wraps `pcall()` into a structured response object.
---- Instead of relying on boolean + varargs, it returns:
---- `{ ok = true, result = ..., err = nil }`
+--- Wraps a protected Lua call (`pcall`) and returns a consistent result table.
+--- Useful for IO, JSON, unsafe function calls etc.
+--- Instead of using `(ok, result)` return, it wraps the result as:
+---   { ok = true, result = <T>, err = nil }
 --- or
---- `{ ok = false, result = nil, err = <message> }`
---- It is recommended for use in all IO, decoding and user input contexts.
+---   { ok = false, result = nil, err = "<string>" }
 
 local M = {}
 
----Performs a protected call and wraps result in a table
+---Safely calls a function and returns a structured result
 ---@generic T
----@param fn fun(...): T
----@param ... any Arguments for the function
----@return boolean, T|string If ok, returns result; otherwise, error message
+---@param fn fun(...): T Function to call
+---@param ... any Arguments to pass to `fn`
+---@return { ok: true, result: T, err: nil } | { ok: false, result: nil, err: string }
 function M.safe_call(fn, ...)
   local ok, result = pcall(fn, ...)
   if ok then
-    return true, result
+    return { ok = true, result = result, err = nil }
   else
-    return false, tostring(result)
+    return { ok = false, result = nil, err = tostring(result) }
   end
 end
 

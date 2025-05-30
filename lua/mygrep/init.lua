@@ -9,14 +9,14 @@
 --- @see mygrep.tools.live_grep
 --- @see mygrep.tools.multigrep
 
--- Project Core
+-- Core
 local registry = require("mygrep.core.registry")
 
 -- Tools
 local live_grep = require("mygrep.tools.live_grep")
 local multigrep = require("mygrep.tools.multigrep")
 
--- Register tools
+-- Register available tools
 registry.register("live_grep", {
   name = "live_grep",
   run = live_grep.run,
@@ -27,10 +27,10 @@ registry.register("multigrep", {
   run = multigrep.run,
 })
 
--- User Interface & Commands
+-- UI
 require("mygrep.usercommands")
 require("mygrep.keymaps")
 
 return {
-  registry = registry,
+  registry = registry, -- for testing or external usage
 }
