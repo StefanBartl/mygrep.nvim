@@ -54,7 +54,7 @@ end
 ---@param opts? table
 function M.run(opts)
   local tool = "multigrep"
-  local state = history.get("live_grep")
+  local state = history.get(tool)
 
   picker.open(tool, "Multi Grep", function(input)
     opts = opts or {}

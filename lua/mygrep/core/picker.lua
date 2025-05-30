@@ -13,6 +13,12 @@ local M = {}
 
 function M.open(tool, title, callback, state, opts)
   opts = opts or {}
+
+  if not state or not state.history then
+    vim.notify("[mygrep] Picker called without valid state", vim.log.levels.ERROR)
+    return
+  end
+
   local default_text = opts.default_text or ""
   local index = #state.history + 1
 
@@ -46,8 +52,7 @@ function M.open(tool, title, callback, state, opts)
 
       map("i", "<C-o>", function()
         local last_prompt = action_state.get_current_line()
-        local prompt_bufnr = vim.api.nvim_get_current_buf()
-        actions.close(prompt_bufnr)
+        actions.close(bufnr)
         vim.defer_fn(function()
           M.open_history_picker(tool, title, callback, state, last_prompt)
         end, 10)
@@ -63,13 +68,11 @@ function M.open(tool, title, callback, state, opts)
         vim.schedule(function()
           if selection and selection.filename and selection.lnum then
             vim.cmd("edit " .. vim.fn.fnameescape(selection.filename))
-
             local line = vim.fn.getline(selection.lnum)
             local regex = vim.fn.escape(input, [[\^$.*~[]])
             local ok, start_col = pcall(function()
               return vim.fn.match(line, regex)
             end)
-
             local col = (ok and start_col >= 0) and start_col + 1 or 1
             vim.api.nvim_win_set_cursor(0, { selection.lnum, col - 1 })
           else
@@ -84,64 +87,84 @@ function M.open(tool, title, callback, state, opts)
 end
 
 function M.open_history_picker(tool, title, callback, state, last_prompt)
-  print("[mygrep] HISTORY:")
-  print(vim.inspect(state.history))
-
-  local function tag(entry)
-    if history.is_favorite(state, entry) then return "[★] " .. entry end
-    if history.is_persist(state, entry) then return "[P] " .. entry end
-    return "[S] " .. entry
-  end
+  history.load(tool, state)
 
   local entries = {}
   local seen = {}
 
-  for _, v in ipairs(state.favorites) do
-    entries[#entries + 1] = tag(v)
-    seen[v] = true
+  local function is_valid(s)
+    return type(s) == "string" and s ~= "" and s ~= "function"
   end
-  for _, v in ipairs(state.persist) do
-    if not seen[v] then
-      entries[#entries + 1] = tag(v)
-      seen[v] = true
-    end
-  end
-  for _, v in ipairs(state.history) do
-    if not seen[v] then
-      entries[#entries + 1] = tag(v)
+
+  local function push(tag, val)
+    if is_valid(val) and not seen[val] then
+      seen[val] = true
+      local symbol = ({
+        favorite = " ",
+        persist  = " ",
+        session  = "S  ",
+      })[tag] or "  "
+      local hl = ({
+        favorite = "MyGrepFavorite",
+        persist  = "MyGrepPersist",
+        session  = "MyGrepSession",
+      })[tag] or "Comment"
+
+      table.insert(entries, {
+        tag = tag,
+        value = val,
+        ordinal = val,
+        display = symbol .. val,
+        display_highlights = { { 0, #symbol, hl } },
+      })
     end
   end
 
+  for _, v in ipairs(state.favorites) do push("favorite", v) end
+  for _, v in ipairs(state.persist) do push("persist", v) end
+  for _, v in ipairs(state.history) do push("session", v) end
+
+  vim.api.nvim_set_hl(0, "MyGrepFavorite", { link = "TelescopeResultsNumber", default = true })
+  vim.api.nvim_set_hl(0, "MyGrepPersist", { link = "TelescopeResultsOperator", default = true })
+  vim.api.nvim_set_hl(0, "MyGrepSession", { link = "Comment", default = true })
+
   pickers.new({}, {
     prompt_title = title .. " History",
-    finder = finders.new_table { results = entries },
+    finder = finders.new_table {
+      results = entries,
+      entry_maker = function(entry)
+        return {
+          value = entry.value,
+          ordinal = entry.ordinal,
+          display = entry.display,
+          display_highlights = entry.display_highlights,
+        }
+      end
+    },
     sorter = conf.generic_sorter({}),
     attach_mappings = function(bufnr, map)
       actions.select_default:replace(function()
         local sel = action_state.get_selected_entry()
-        if sel and sel[1] then
-          local raw = sel[1]:gsub("^%[[^%]]+%]%s*", "")
+        if sel and sel.value then
           actions.close(bufnr)
-          callback(raw)
+          callback(sel.value)
         end
       end)
 
       map("i", "<C-d>", function()
         local sel = action_state.get_selected_entry()
-        if not sel or not sel[1] then return end
-        local raw = sel[1]:gsub("^%[[^%]]+%]%s*", "")
-        history.remove(state, raw)
+        if not sel or not sel.value then return end
+        history.remove(state, sel.value)
         history.save(tool, state)
-        M.open_history_picker(tool, title, callback, state)
+        M.open_history_picker(tool, title, callback, state, last_prompt)
       end)
 
       map("i", "<Tab>", function()
         local sel = action_state.get_selected_entry()
-        if not sel or not sel[1] then return end
-        local raw = sel[1]:gsub("^%[[^%]]+%]%s*", "")
-        history.toggle_state(state, raw)
+        if not sel or not sel.value then return end
+        history.toggle_state(state, sel.value)
         history.save(tool, state)
-        M.open_history_picker(tool, title, callback, state)
+        M.open_history_picker(tool, title, callback, state, last_prompt)
       end)
 
       map("i", "<Esc>", function()
@@ -152,7 +175,7 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
       end)
 
       return true
-    end,
+    end
   }):find()
 end
 
