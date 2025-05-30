@@ -21,6 +21,8 @@ function M.run(opts)
     return
   end
 
+  history.load(tool, state)
+
   picker.open(tool, "Live Grep", function(input)
     if type(input) ~= "string" or input == "" then
       vim.notify("[mygrep] Invalid input passed to live_grep", vim.log.levels.WARN)

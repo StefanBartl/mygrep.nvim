@@ -56,6 +56,8 @@ function M.run(opts)
     return
   end
 
+  history.load(tool, state)
+
   picker.open(tool, "Multi Grep", function(input)
     if type(input) ~= "string" or input == "" then
       vim.notify("[mygrep] Invalid input passed to multigrep", vim.log.levels.WARN)

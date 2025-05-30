@@ -1,8 +1,5 @@
 ---@module 'mygrep.core.history'
 ---@brief Manages per-tool search history, favorites, and persistent queries
----@description
---- Each tool (e.g. `live_grep`, `multigrep`) has a dedicated memory state.
---- Supports session-only history, favorite queries, and persistent storage on disk.
 
 local uv = vim.uv or vim.loop
 local encode = vim.json.encode
@@ -12,14 +9,12 @@ local M = {}
 
 -- Private ---------------------------------------------------------------------
 
----Returns true if string is valid and not a Lua function keyword
 ---@param s any
 ---@return boolean
 local function is_valid_query(s)
   return type(s) == "string" and s ~= "" and s ~= "function"
 end
 
----Returns index of value in table or -1
 ---@param t any[]
 ---@param val any
 ---@return integer
@@ -30,7 +25,6 @@ local function index_of(t, val)
   return -1
 end
 
----Builds the disk path for storing persistent queries
 ---@param tool ToolName
 ---@return string
 local function get_storage_path(tool)
@@ -41,7 +35,6 @@ end
 
 -- Public API ------------------------------------------------------------------
 
----Returns memory state for a given tool, initializes if missing
 ---@param tool ToolName
 ---@return ToolState
 function M.get(tool)
@@ -59,7 +52,6 @@ function M.get(tool)
   return M[tool]
 end
 
----Appends input to history if new and valid
 ---@param state ToolState
 ---@param input string
 function M.add_history(state, input)
@@ -68,7 +60,6 @@ function M.add_history(state, input)
   end
 end
 
----Toggles query between favorite, persistent, and none
 ---@param state ToolState
 ---@param query string
 function M.toggle_state(state, query)
@@ -90,15 +81,14 @@ function M.toggle_state(state, query)
   table.insert(state.favorites, query)
 end
 
----Removes query from all memory categories
 ---@param state ToolState
 ---@param query string
 function M.remove(state, query)
   if not is_valid_query(query) then return end
 
   local function remove_from(tbl)
-    local i = index_of(tbl, query)
-    if i ~= -1 then table.remove(tbl, i) end
+    local idx = index_of(tbl, query)
+    if idx ~= -1 then table.remove(tbl, idx) end
   end
 
   remove_from(state.history)
@@ -106,7 +96,6 @@ function M.remove(state, query)
   remove_from(state.persist)
 end
 
----Persists persistent queries to disk
 ---@param tool ToolName
 ---@param state ToolState
 function M.save(tool, state)
@@ -129,7 +118,6 @@ function M.save(tool, state)
   f:close()
 end
 
----Loads persisted queries from disk into memory state
 ---@param tool ToolName
 ---@param state ToolState
 function M.load(tool, state)

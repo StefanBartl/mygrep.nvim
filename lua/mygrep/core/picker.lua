@@ -22,31 +22,44 @@ function M.open(tool, title, callback, state, opts)
   local default_text = opts.default_text or ""
   local index = #state.history + 1
 
+  -- Merge all known entries (history, favorites, persist) into flat list
+  local function build_combined_history(state)
+    local result, seen = {}, {}
+    for _, list in ipairs({ state.history, state.favorites, state.persist }) do
+      for _, entry in ipairs(list) do
+        if not seen[entry] and type(entry) == "string" and entry ~= "" and entry ~= "function" then
+          table.insert(result, entry)
+          seen[entry] = true
+        end
+      end
+    end
+    return result
+  end
+
+  local combined_history = build_combined_history(state)
+  local current_index = #combined_history + 1
+
   require("telescope.builtin").live_grep({
     prompt_title = title,
     default_text = default_text,
     attach_mappings = function(bufnr, map)
+      local picker = action_state.get_current_picker(bufnr)
+
       map("i", "<C-n>", function()
-        if #state.history == 0 then return end
-        index = math.min(index + 1, #state.history)
-        local entry = state.history[index]
+        if #combined_history == 0 then return end
+        current_index = (current_index % #combined_history) + 1
+        local entry = combined_history[current_index]
         if entry then
-          actions.close(bufnr)
-          vim.defer_fn(function()
-            M.open(tool, title, callback, state, { default_text = entry })
-          end, 10)
+          require("telescope.actions.state").get_current_picker(bufnr):reset_prompt(entry)
         end
       end)
 
       map("i", "<C-p>", function()
-        if #state.history == 0 then return end
-        index = math.max(index - 1, 1)
-        local entry = state.history[index]
+        if #combined_history == 0 then return end
+        current_index = ((current_index - 2 + #combined_history) % #combined_history) + 1
+        local entry = combined_history[current_index]
         if entry then
-          actions.close(bufnr)
-          vim.defer_fn(function()
-            M.open(tool, title, callback, state, { default_text = entry })
-          end, 10)
+          require("telescope.actions.state").get_current_picker(bufnr):reset_prompt(entry)
         end
       end)
 
@@ -92,7 +105,6 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
   local entries = {}
   local seen = {}
 
-  --BUG: Colored sdymbols don't work!
   vim.api.nvim_set_hl(0, "MyGrepFavorite", { link = "TelescopeResultsNumber", default = true })
   vim.api.nvim_set_hl(0, "MyGrepPersist", { link = "TelescopeResultsOperator", default = true })
   vim.api.nvim_set_hl(0, "MyGrepSession", { link = "Comment", default = true })
@@ -119,7 +131,6 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
 
       local width = vim.fn.strdisplaywidth(symbol)
 
-      --BUG: Colored sdymbols don't work!
       table.insert(entries, {
         tag = tag,
         value = val,
@@ -140,7 +151,7 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
     table.insert(entries, {
       value = "",
       ordinal = "empty",
-      display = "[mygrep] Keine gespeicherten Suchanfragen", --REF: english!
+      display = "[mygrep] No saved search queries",
       display_highlights = {
         { 0, 35, "Comment" }
       }
@@ -182,10 +193,9 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
         local sel = action_state.get_selected_entry()
         if not sel or not sel.value then return end
 
-        -- Check if next toggle would remove query from history and persistent
         local is_persistent = vim.tbl_contains(state.persist or {}, sel.value)
         if is_persistent then
-          vim.ui.input({ prompt = "[mygrep] Do you wan't remove the query from history? [y/n]: " }, function(answer)
+          vim.ui.input({ prompt = "[mygrep] Remove persistent query from file? [y/n]: " }, function(answer)
             if answer == "y" then
               history.toggle_state(state, sel.value)
               history.save(tool, state)
