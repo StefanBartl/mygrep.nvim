@@ -1,4 +1,4 @@
-*mygrep.txt*   Plugin documentation for mygrep.nvim     Last Change:  May 30, 2025
+help_text = """*mygrep.txt*   Plugin documentation for mygrep.nvim     Last Change:  May 30, 2025
 
 ==============================================================================
 INTRODUCTION                                                        *:Mygrep*
@@ -109,6 +109,33 @@ CREDITS
 
 Created by Stefan Bartl
 Inspired by Telescope.nvim
+
+==============================================================================
+MULTIGREP USAGE                                                    *mygrep-multigrep*
+
+`multigrep` extends `live_grep` by allowing an optional file glob after the search query.
+
+Format:
+
+    <search_term>  <file_glob>
+
+The pattern and glob must be separated by TWO spaces. Globs follow ripgrep (-g) syntax.
+
+Examples:
+
+    TODO              → search "TODO" in all files
+    TODO  *.lua       → restrict to Lua files
+    error  **/*.ts    → recursive search in .ts files
+    init  init*.lua   → match files like "init_config.lua"
+    button  **/*.css  → only CSS files
+    API  docs/*.md    → only markdown files in docs/
+
+Multi-extension:
+
+    main  *.{js,ts}   → .js and .ts files
+
+Globs reference:
+> https://github.com/BurntSushi/ripgrep/blob/master/GLOB.md
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
