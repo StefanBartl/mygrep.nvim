@@ -92,6 +92,11 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
   local entries = {}
   local seen = {}
 
+  --BUG: Colored sdymbols don't work!
+  vim.api.nvim_set_hl(0, "MyGrepFavorite", { link = "TelescopeResultsNumber", default = true })
+  vim.api.nvim_set_hl(0, "MyGrepPersist", { link = "TelescopeResultsOperator", default = true })
+  vim.api.nvim_set_hl(0, "MyGrepSession", { link = "Comment", default = true })
+
   local function is_valid(s)
     return type(s) == "string" and s ~= "" and s ~= "function"
   end
@@ -99,23 +104,30 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
   local function push(tag, val)
     if is_valid(val) and not seen[val] then
       seen[val] = true
+
       local symbol = ({
         favorite = " ",
         persist  = " ",
         session  = "S  ",
       })[tag] or "  "
+
       local hl = ({
         favorite = "MyGrepFavorite",
         persist  = "MyGrepPersist",
         session  = "MyGrepSession",
       })[tag] or "Comment"
 
+      local width = vim.fn.strdisplaywidth(symbol)
+
+      --BUG: Colored sdymbols don't work!
       table.insert(entries, {
         tag = tag,
         value = val,
         ordinal = val,
         display = symbol .. val,
-        display_highlights = { { 0, #symbol, hl } },
+        display_highlights = {
+          { 0, width, hl }
+        },
       })
     end
   end
@@ -124,9 +136,15 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
   for _, v in ipairs(state.persist) do push("persist", v) end
   for _, v in ipairs(state.history) do push("session", v) end
 
-  vim.api.nvim_set_hl(0, "MyGrepFavorite", { link = "TelescopeResultsNumber", default = true })
-  vim.api.nvim_set_hl(0, "MyGrepPersist", { link = "TelescopeResultsOperator", default = true })
-  vim.api.nvim_set_hl(0, "MyGrepSession", { link = "Comment", default = true })
+  if vim.tbl_isempty(entries) then
+    table.insert(entries, {
+      value = "",
+      ordinal = "empty",
+      display = "[mygrep] Keine gespeicherten Suchanfragen",
+    })
+  end
+
+
 
   pickers.new({}, {
     prompt_title = title .. " History",

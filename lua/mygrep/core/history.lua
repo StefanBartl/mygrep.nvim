@@ -17,7 +17,7 @@ M.multigrep = {
 ---@private
 -- Nur gültige Strings akzeptieren
 local function is_valid_query(s)
-  return type(s) == "string" and s ~= "" and s ~= "function"
+  return type(s) == "string" and s ~= ""
 end
 
 
