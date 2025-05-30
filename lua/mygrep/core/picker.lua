@@ -11,6 +11,17 @@ local history = require("mygrep.core.history")
 
 local M = {}
 
+---Returns the index of a value in a list or nil
+---@param t table
+---@param val any
+---@return integer|nil
+local function tbl_indexof(t, val)
+  for i, v in ipairs(t) do
+    if v == val then return i end
+  end
+  return nil
+end
+
 function M.open(tool, title, callback, state, opts)
   opts = opts or {}
 
@@ -164,6 +175,7 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
       results = entries,
       entry_maker = function(entry)
         return {
+          tag = entry.tag,
           value = entry.value,
           ordinal = entry.ordinal,
           display = entry.display,
@@ -208,6 +220,34 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
         history.toggle_state(state, sel.value)
         history.save(tool, state)
         M.open_history_picker(tool, title, callback, state, last_prompt)
+      end)
+
+      map("i", "<C-Up>", function()
+        local sel = action_state.get_selected_entry()
+        if not sel or not sel.value or not sel.tag then return end
+        local list = state[sel.tag]
+        local idx = tbl_indexof(list, sel.value)
+        if idx and idx > 1 then
+          list[idx], list[idx - 1] = list[idx - 1], list[idx]
+          if sel.tag == "persist" then
+            history.save(tool, state)
+          end
+          M.open_history_picker(tool, title, callback, state, last_prompt)
+        end
+      end)
+
+      map("i", "<C-Down>", function()
+        local sel = action_state.get_selected_entry()
+        if not sel or not sel.value or not sel.tag then return end
+        local list = state[sel.tag]
+        local idx = tbl_indexof(list, sel.value)
+        if idx and idx < #list then
+          list[idx], list[idx + 1] = list[idx + 1], list[idx]
+          if sel.tag == "persist" then
+            history.save(tool, state)
+          end
+          M.open_history_picker(tool, title, callback, state, last_prompt)
+        end
       end)
 
       map("i", "<Esc>", function()
