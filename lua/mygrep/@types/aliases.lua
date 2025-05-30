@@ -5,6 +5,14 @@
 --- mygrep.nvim to improve LSP support and ensure consistency across tools.
 --- It should be imported anywhere type safety or shared interfaces are required.
 
+---Plugin-wide configuration options
+---@alias ConfigOptions table<string, any>
+
+---Defines which UI to use for selecting tools:
+---"ui"     => floating window buffer (default)
+---"select" => command-line `vim.ui.select()`
+---@alias ToolPickerStyle '"ui"' | '"select"'
+
 ---@alias ToolName string Tool identifier used in registry (e.g. "live_grep", "multigrep")
 
 ---@class ToolState

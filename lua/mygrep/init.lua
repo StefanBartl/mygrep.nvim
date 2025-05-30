@@ -11,12 +11,13 @@
 
 -- Core
 local registry = require("mygrep.core.registry")
+local config = require("mygrep.config")
 
 -- Tools
 local live_grep = require("mygrep.tools.live_grep")
 local multigrep = require("mygrep.tools.multigrep")
 
--- Register available tools
+-- Register built-in tools
 registry.register("live_grep", {
   name = "live_grep",
   run = live_grep.run,
@@ -27,10 +28,28 @@ registry.register("multigrep", {
   run = multigrep.run,
 })
 
--- UI
+-- Setup UI integrations
 require("mygrep.usercommands")
 require("mygrep.keymaps")
 
-return {
-  registry = registry, -- for testing or external usage
-}
+-- Public API
+local M = {}
+
+---Plugin setup function (called by user)
+---@param opts? table<string, any>
+function M.setup(opts)
+  if type(opts) == "table" then
+    for k, v in pairs(opts) do
+      if config.options[k] ~= nil then
+        config.options[k] = v
+      else
+        vim.notify("[mygrep] Unknown config option: " .. k, vim.log.levels.WARN)
+      end
+    end
+  end
+end
+
+-- Optional exports (e.g. for testing or programmatic access)
+M.registry = registry
+
+return M

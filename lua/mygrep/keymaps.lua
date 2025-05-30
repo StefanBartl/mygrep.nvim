@@ -14,12 +14,8 @@ local function map(mode, lhs, rhs, desc)
 end
 
 -- Tool Picker via <leader>gr
---vim.keymap.set("n", "<leader>gr", function()
---  require("mygrep.ui.tool_picker").open()
---end, { desc = "Open grep tool selector" })
-
 vim.keymap.set("n", "<leader>gr", function()
-  require("mygrep.ui.tool_selector").open()
+  require("mygrep.ui.tool_picker").open()
 end, { desc = "Open tool selector (floating)" })
 
 -- 🔍 Tool Launch Shortcuts
