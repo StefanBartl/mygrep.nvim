@@ -13,6 +13,15 @@ local function map(mode, lhs, rhs, desc)
   vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
 end
 
+-- Tool Picker via <leader>gr
+--vim.keymap.set("n", "<leader>gr", function()
+--  require("mygrep.ui.tool_picker").open()
+--end, { desc = "Open grep tool selector" })
+
+vim.keymap.set("n", "<leader>gr", function()
+  require("mygrep.ui.tool_selector").open()
+end, { desc = "Open tool selector (floating)" })
+
 -- 🔍 Tool Launch Shortcuts
 map("n", "<leader>lg", function()
   local tool = registry.get("live_grep")
@@ -23,10 +32,6 @@ map("n", "<leader>fg", function()
   local tool = registry.get("multigrep")
   if tool then tool.run() end
 end, "[mygrep] Run multigrep")
-
-map("n", "<leader>gr", function()
-  vim.cmd("Mygrep")
-end, "[mygrep] Tool selector")
 
 -- Picker navigation (only relevant inside insert mode of prompt buffer)
 -- These keymaps are dynamically applied by `core/picker.lua`, not globally.
