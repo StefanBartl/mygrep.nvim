@@ -38,7 +38,7 @@ function M.open(tool, title, callback, state, opts)
     local result, seen = {}, {}
     for _, list in ipairs({ state.history, state.favorites, state.persist }) do
       for _, entry in ipairs(list) do
-        if not seen[entry] and type(entry) == "string" and entry ~= "" and entry ~= "function" then
+        if not seen[entry] and type(entry) == "string" and entry ~= "" then
           table.insert(result, entry)
           seen[entry] = true
         end
@@ -121,7 +121,7 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
   vim.api.nvim_set_hl(0, "MyGrepSession", { link = "Comment", default = true })
 
   local function is_valid(s)
-    return type(s) == "string" and s ~= "" and s ~= "function"
+    return type(s) == "string" and s ~= ""
   end
 
   local function push(tag, val)
