@@ -1,13 +1,10 @@
 ---@module 'mygrep.core.history'
 ---@brief Manages per-tool search history, favorites, and persistent queries
 
-local uv = vim.uv or vim.loop
 local encode = vim.json.encode
 local decode = vim.json.decode
 
 local M = {}
-
--- Private ---------------------------------------------------------------------
 
 ---@param s any
 ---@return boolean
@@ -32,8 +29,6 @@ local function get_storage_path(tool)
   vim.fn.mkdir(dir, "p")
   return dir .. "/" .. tool .. ".json"
 end
-
--- Public API ------------------------------------------------------------------
 
 ---@param tool ToolName
 ---@return ToolState

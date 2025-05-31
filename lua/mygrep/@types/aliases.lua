@@ -33,6 +33,13 @@
 ---Mapping of all registered tools
 ---@alias RegistryTable table<ToolName, RegistryEntry>
 
+---@alias SearchRootMode 'cwd' | 'root' | 'custom' | 'home'
+
+---@class SearchRootState
+---@field mode SearchRootMode
+---@field custom_path? string
+---@field project_dir? string
+
 local M = {}
 
 return M

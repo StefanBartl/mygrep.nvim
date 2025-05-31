@@ -30,7 +30,6 @@ function M.open(tool, title, callback, state, opts)
   end
 
   local default_text = opts.default_text or ""
-  local index = #state.history + 1
 
   -- Merge all known entries (history, favorites, persist) into flat list
   local function build_combined_history(state)
@@ -209,12 +208,11 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
         M.open_history_picker(tool, title, callback, state, last_prompt)
       end)
 
-      -- <Tab> vorwärts durchschalten
       map("i", "<Tab>", function()
         local sel = action_state.get_selected_entry()
         if not sel or not sel.value then return end
 
-        -- optional: Bestätigung für Persistent löschen
+        -- optional: Confirmation for persistent deletion
         local is_persistent = vim.tbl_contains(state.persist or {}, sel.value)
         if is_persistent then
           vim.ui.input({ prompt = "[mygrep] Remove persistent query from file? [y/n]: " }, function(answer)
@@ -232,7 +230,6 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
         M.open_history_picker(tool, title, callback, state, last_prompt)
       end)
 
-      -- <S-Tab> rückwärts durchschalten
       map("i", "<S-Tab>", function()
         local sel = action_state.get_selected_entry()
         if not sel or not sel.value then return end

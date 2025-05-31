@@ -9,8 +9,6 @@
 --- @see mygrep.tools.live_grep
 --- @see mygrep.tools.multigrep
 
-require("mygrep.@types.aliases")
-
 -- Core
 local registry = require("mygrep.core.registry")
 local config = require("mygrep.config")

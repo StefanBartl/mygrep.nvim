@@ -3,10 +3,6 @@
 
 local M = {}
 
----@class SearchRootState
----@field mode 'cwd' | 'root' | 'custom' | 'home'
----@field custom_path? string
----@field project_dir? string
 
 ---@type SearchRootState
 local state = {
@@ -22,7 +18,7 @@ function M.get()
 end
 
 ---Returns current root mode
----@return SearchRootState["mode"]
+---@return SearchRootMode
 function M.mode()
   return state.mode
 end
@@ -42,9 +38,9 @@ local function remember_project_dir()
   end
 end
 
----Normalizes a user path input (expands ~ etc.)
+-- Normalizes a user path input (expands ~, checks if valid dir)
 ---@param path string
----@return string normalized, or empty string if invalid
+---@return string normalized path, or empty string if invalid
 local function normalize_path(path)
   local resolved = vim.fn.expand(path)
   if vim.fn.isdirectory(resolved) == 1 then
@@ -55,7 +51,7 @@ end
 
 ---Changes the working directory safely
 ---@param path string
----@param mode SearchRootState["mode"]
+---@param mode SearchRootMode
 local function change_dir(path, mode)
   local ok, err = pcall(vim.fn.chdir, path)
   if not ok then

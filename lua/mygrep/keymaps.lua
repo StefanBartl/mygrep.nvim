@@ -36,10 +36,15 @@ end, "[mygrep] Run multigrep")
 -- Picker navigation (only relevant inside insert mode of prompt buffer)
 -- These keymaps are dynamically applied by `core/picker.lua`, not globally.
 -- Documentation only:
+--    <CR>: Execute search and save query in memory / in the history picker re-run the selected query
 --   <C-n>: next history
 --   <C-p>: previous history
 --   <C-o>: open history picker
 --   <Tab>: toggle (session → persist → remove)
+-- <S-Tab>: Reverse toggle:
 --   <C-d>: delete query from history picker
+--  <C-Up>: Move query up within its section
+--<C-Down>: Move query down within its section
+--   <Esc>: Return to main picker with restored prompt
 
 return {}
