@@ -88,10 +88,11 @@ See `:h mygrep` for full list.
 
 * `<CR>` confirms a query and adds it to session memory
 * `<Tab>` in history picker toggles favorite or persistent mode
+* `<S-Tab>` cycles states in reverse (persistent → favorite → session)
 * `<C-d>` deletes the selected query
 * `<Esc>` returns to previous prompt (from history picker)
 * `<C-n>`, `<C-p>` rotate through previous queries
-* `<C-Up>` Move query in up within its section
+* `<C-Up>` Move query up within its section
 * `<C-Down>` Move query down within its section
 
 Icons:

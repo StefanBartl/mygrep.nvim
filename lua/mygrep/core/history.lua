@@ -83,6 +83,44 @@ end
 
 ---@param state ToolState
 ---@param query string
+function M.toggle_state_reverse(state, query)
+  if not is_valid_query(query) then return end
+
+  -- remove from all lists first
+  local function remove_all()
+    local function remove(t)
+      local i = index_of(t, query)
+      if i ~= -1 then table.remove(t, i) end
+    end
+    remove(state.favorites)
+    remove(state.persist)
+    remove(state.history)
+  end
+
+  -- Persistent → Favorite
+  if index_of(state.persist, query) ~= -1 then
+    remove_all()
+    table.insert(state.favorites, query)
+    return
+  end
+
+  -- Favorite → Session
+  if index_of(state.favorites, query) ~= -1 then
+    remove_all()
+    table.insert(state.history, query)
+    return
+  end
+
+  -- Session → Persistent
+  if index_of(state.history, query) ~= -1 then
+    remove_all()
+    table.insert(state.persist, query)
+    return
+  end
+end
+
+---@param state ToolState
+---@param query string
 function M.remove(state, query)
   if not is_valid_query(query) then return end
 

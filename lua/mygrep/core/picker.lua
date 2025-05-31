@@ -209,10 +209,12 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
         M.open_history_picker(tool, title, callback, state, last_prompt)
       end)
 
+      -- <Tab> vorwärts durchschalten
       map("i", "<Tab>", function()
         local sel = action_state.get_selected_entry()
         if not sel or not sel.value then return end
 
+        -- optional: Bestätigung für Persistent löschen
         local is_persistent = vim.tbl_contains(state.persist or {}, sel.value)
         if is_persistent then
           vim.ui.input({ prompt = "[mygrep] Remove persistent query from file? [y/n]: " }, function(answer)
@@ -226,6 +228,16 @@ function M.open_history_picker(tool, title, callback, state, last_prompt)
         end
 
         history.toggle_state(state, sel.value)
+        history.save(tool, state)
+        M.open_history_picker(tool, title, callback, state, last_prompt)
+      end)
+
+      -- <S-Tab> rückwärts durchschalten
+      map("i", "<S-Tab>", function()
+        local sel = action_state.get_selected_entry()
+        if not sel or not sel.value then return end
+
+        history.toggle_state_reverse(state, sel.value)
         history.save(tool, state)
         M.open_history_picker(tool, title, callback, state, last_prompt)
       end)

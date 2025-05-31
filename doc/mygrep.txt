@@ -66,6 +66,9 @@ In the history picker:
                → S →  (Favorite)
                →  →  (Persistent)
                →  → remove
+- <S-Tab>    Reverse toggle:
+               →  → 
+               →  → S
 - <C-d>      Remove query from history entirely
 - <C-Up>     Move query up within its section
 - <C-Down>   Move query down within its section
