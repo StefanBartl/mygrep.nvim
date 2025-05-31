@@ -171,8 +171,11 @@ registry.register("grep_open_files", {
 
 ## Built-in Tools
 
-* `live_grep`: telescope.builtin.live\_grep
-* `multigrep`: your own multi-path version
+* **`live_grep`**: uses native `telescope.builtin.live_grep`
+  → full-text search with fuzzy matching
+
+* **`multigrep`**: search against filenames and glob patterns using multiple fields (`pattern *.lua`)
+  → powered by `rg`, supports `-e` and `-g` arguments dynamically
 
 ---
 

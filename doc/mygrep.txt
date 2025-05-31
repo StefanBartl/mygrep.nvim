@@ -1,14 +1,14 @@
-help_text = """*mygrep.txt*   Plugin documentation for mygrep.nvim     Last Change:  May 30, 2025
+help_text = """*mygrep.txt*     mygrep.nvim doc     Last Change:  May 30, 2025
 
 ==============================================================================
-INTRODUCTION                                                        *:Mygrep*
+INTRODUCTION                                                         *:Mygrep*
 
 mygrep.nvim is a Telescope-based grep memory layer. It allows you to use
 tools like `live_grep` or `multigrep` and automatically remembers your search
 queries, favorites, and persistent patterns – even across sessions.
 
 ==============================================================================
-USAGE
+USAGE                                                                  *usage*
 
 To run a registered grep tool:
 
@@ -40,7 +40,7 @@ Registered tools:
 - |mygrep-multigrep|
 
 ==============================================================================
-KEYBINDINGS
+KEYBINDINGS                                                      *keybindings*
 
 Default normal-mode mappings (see |mygrep.keymaps|):
 
@@ -51,7 +51,7 @@ Default normal-mode mappings (see |mygrep.keymaps|):
 These mappings can be overridden using `setup({ keymaps = { ... } })`.
 
 ==============================================================================
-PICKER INTERACTIONS                                                *mygrep-picker*
+PICKER INTERACTIONS                                            *mygrep-picker*
 
 When inside a grep picker (e.g., live_grep):
 
@@ -82,7 +82,7 @@ Symbol legend:
     S         Session (in-memory only)
 
 ==============================================================================
-ROOT DIRECTORY SWITCHING                                            *mygrep-root*
+ROOT DIRECTORY SWITCHING                                         *mygrep-root*
 
 mygrep.nvim allows you to change the current working directory for all
 registered tools. This enables flexible searching across different scopes.
@@ -107,7 +107,7 @@ Inside pickers, the root selector is also bound to:
 Changing the root will update the active directory for all future queries.
 
 ==============================================================================
-EXTENDING
+EXTENDING                                             *mygrep.core.registry*
 
 To register your own tool:
 
@@ -124,30 +124,80 @@ To register your own tool:
 <
 
 ==============================================================================
-INTERNAL MODULES
+MEMORY SYSTEM                                            *mygrep.core.history*
 
-- |mygrep.core.history|   Session + persistent memory storage
-- |mygrep.core.picker|    Picker interface
-- |mygrep.core.registry|  Tool registration & dispatch
-- |mygrep.tools.live_grep|
-- |mygrep.tools.multigrep|
+mygrep.nvim stores search queries automatically and organizes them into
+three categories:
+
+    S   Session-only → remembered until Neovim exits
+       Favorites    → manually marked entries
+       Persistent   → saved to disk and restored across sessions
+
+When you submit a query (<CR>), it is added to session memory if not already
+present. You can toggle the state of saved entries via the 
+history picker (|mygrep-picker|):
+
+    <Tab>     S →  →  → (removed)
+    <S-Tab>   (reverse)
+    <C-d>     Delete entry entirely
+
+Favorites and persistent entries are prioritized in display order.
+
+Storage location:
+
+    $XDG_DATA_HOME/mygrep/<tool>.json
+
+For example:
+
+    ~/.local/share/nvim/mygrep/live_grep.json
+
+Each tool manages its own independent history. The memory layer is handled
+internally by |mygrep.core.history| and can be accessed by custom tools via:
+
+>lua
+  local state = require("mygrep.core.history").get("toolname")
+  require("mygrep.core.history").add_history(state, query)
+
+<
+See also:
+
+|mygrep-picker|  – for all interactive history actions
+|mygrep-root|    – memory is relative to current search root
 
 ==============================================================================
-CREDITS
+LIVE_GREP USAGE                                              *mygrep-livegrep*
 
-Created by Stefan Bartl
-Inspired by Telescope.nvim
+`live_grep` provides fast full-text search using Telescope's built-in
+|telescope.builtin.live_grep|.
 
-==============================================================================
-MULTIGREP USAGE                                                    *mygrep-multigrep*
+Format:
 
-`multigrep` extends `live_grep` by allowing an optional file glob after the search query.
+    <search_term>
+
+Real-time search as you type (ripgrep-powered). It's ideal for general-purpose 
+search across all files in the current root (see |mygrep-root|).
+
+Examples:
+
+    TODO              → search all files for "TODO"
+    init              → find all files mentioning "init"
+    config            → list all lines matching "config"
+
+Live Grep is suitable for most use cases where filename filtering is not
+required. For structured queries, see |mygrep-multigrep|.
+
+=============================================================================
+MULTIGREP USAGE                                            *mygrep-multigrep*
+
+`multigrep` extends `live_grep` by allowing an optional file glob after
+the search query.
 
 Format:
 
     <search_term>  <file_glob>
 
-The pattern and glob must be separated by TWO spaces. Globs follow ripgrep (-g) syntax.
+The pattern and glob must be separated by TWO spaces. 
+Globs follow ripgrep (-g) syntax.
 
 Examples:
 
@@ -166,4 +216,23 @@ Globs reference:
 > https://github.com/BurntSushi/ripgrep/blob/master/GLOB.md
 
 ==============================================================================
+CREDITS
+
+Created by Stefan Bartl
+Inspired by Telescope.nvim
+
+==============================================================================
+SEE ALSO
+
+|:Mygrep|             Command entry point
+|usage|
+|keybindings|
+|mygrep-picker|       Keybindings and interactions inside pickers
+|mygrep-root|         Changing the search root (cwd, /, ~, custom)
+|mygrep.core.registry|Tool registration API
+|mygrep.core.history| Memory system (session, favorites, persist)
+|mygrep-livegrep|     Live grep usage and behavior
+|mygrep-multigrep|    Multigrep input format and examples
+
 vim:tw=78:ts=8:ft=help:norl:
+
