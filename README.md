@@ -91,6 +91,8 @@ See `:h mygrep` for full list.
 * `<C-d>` deletes the selected query
 * `<Esc>` returns to previous prompt (from history picker)
 * `<C-n>`, `<C-p>` rotate through previous queries
+* `<C-Up>` Move query in up within its section
+* `<C-Down>` Move query down within its section
 
 Icons:
 
@@ -111,6 +113,40 @@ Persistent queries are saved to:
 ```
 
 Session queries exist only during the current Neovim session.
+
+---
+
+## Root Directory Switching
+
+`mygrep.nvim` lets you dynamically change the working directory used by Neovim and all registered grep tools.
+
+This allows you to **search in different scopes** — project, home, system root, or a custom directory — without restarting or reconfiguring anything.
+
+### Available options
+
+* `` **Project directory** (default)
+* `󰋞` **Home directory** (`~`)
+* `󰜉` **Filesystem root** (`/`)
+* `` **Custom path** (user-defined)
+
+### How to use
+
+You can trigger the root selector from anywhere using:
+
+```lua
+:lua require("mygrep.context.search_root").select()
+```
+
+By default, it’s bound inside pickers to:
+
+```lua
+vim.keymap.set("n", "<F5>", function()
+  require("mygrep.context.search_root").select()
+end, { desc = "Change mygrep root directory" })
+```
+
+While using a picker, simply press `<F5>` to choose a new root directory.
+Your selection will immediately take effect for all subsequent queries.
 
 ---
 

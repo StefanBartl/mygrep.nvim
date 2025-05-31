@@ -79,6 +79,31 @@ Symbol legend:
     S         Session (in-memory only)
 
 ==============================================================================
+ROOT DIRECTORY SWITCHING                                            *mygrep-root*
+
+mygrep.nvim allows you to change the current working directory for all
+registered tools. This enables flexible searching across different scopes.
+
+Available options:
+
+       Project directory (default)
+    󰋞   Home directory (~)
+    󰜉   Filesystem root (/)
+       Custom path (manually entered)
+
+To open the directory switcher manually:
+
+>lua
+  require("mygrep.context.search_root").select()
+<
+
+Inside pickers, the root selector is also bound to:
+
+    <F5>        Open root switch menu
+
+Changing the root will update the active directory for all future queries.
+
+==============================================================================
 EXTENDING
 
 To register your own tool:

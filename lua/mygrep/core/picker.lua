@@ -6,7 +6,6 @@ local action_state = require("telescope.actions.state")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
-
 local history = require("mygrep.core.history")
 
 local M = {}
@@ -54,7 +53,16 @@ function M.open(tool, title, callback, state, opts)
     prompt_title = title,
     default_text = default_text,
     attach_mappings = function(bufnr, map)
-      local picker = action_state.get_current_picker(bufnr)
+      map("i", "<F5>", function()
+        local last_prompt = action_state.get_current_line()
+        actions.close(bufnr)
+        vim.defer_fn(function()
+          require("mygrep.context.search_root").select()
+          vim.defer_fn(function()
+            M.open(tool, title, callback, state, { default_text = last_prompt })
+          end, 100)
+        end, 10)
+      end)
 
       map("i", "<C-n>", function()
         if #combined_history == 0 then return end

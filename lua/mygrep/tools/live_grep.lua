@@ -8,6 +8,7 @@
 local builtin = require("telescope.builtin")
 local picker = require("mygrep.core.picker")
 local history = require("mygrep.core.history")
+local search_root = require("mygrep.context.search_root")
 
 local M = {}
 
@@ -31,6 +32,7 @@ function M.run(opts)
 
     local args = vim.tbl_extend("force", opts or {}, {
       default_text = input,
+      cwd = search_root.get(),
     })
 
     builtin.live_grep(args)
