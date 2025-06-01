@@ -44,6 +44,11 @@
 ---@field custom_path? string
 ---@field project_dir? string
 
+---@alias PickerMappingParams { tool: ToolName, title: string, callback: fun(string), tool_state: ToolState, combined_history: string[], last_prompt: string }
+
+---@alias EntryTag "favorite" | "persist" | "session"
+
+
 local M = {}
 
 return M
