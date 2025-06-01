@@ -16,21 +16,20 @@ local M = {}
 ---@private
 ---@param tbl table
 ---@param query string
-local function remove_from(tbl, query)
+local function remove_from_tbl(tbl, query)
   local idx = index_of(tbl, query)
   if idx ~= -1 then table.remove(tbl, idx) end
 end
 
 
----@private
 ---@param state ToolState
 ---@param query string
-local function remove_all(state, query)
+function M.remove_from_all(state, query)
   if not is_valid_query(query) then return end
 
-  remove_from(state.history, query)
-  remove_from(state.favorites, query)
-  remove_from(state.persist, query)
+  remove_from_tbl(state.history, query)
+  remove_from_tbl(state.favorites, query)
+  remove_from_tbl(state.persist, query)
 end
 
 ---@param tool ToolName
@@ -116,21 +115,21 @@ function M.toggle_state_reverse(state, query)
 
   -- Persistent → Favorite
   if index_of(state.persist, query) ~= -1 then
-    remove_all(state, query)
+    M.remove_from_all(state, query)
     table.insert(state.favorites, query)
     return
   end
 
   -- Favorite → Session
   if index_of(state.favorites, query) ~= -1 then
-    remove_all(state, query)
+    M.remove_from_all(state, query)
     table.insert(state.history, query)
     return
   end
 
   -- Session → Persistent
   if index_of(state.history, query) ~= -1 then
-    remove_all(state, query)
+    M.remove_from_all(state, query)
     table.insert(state.persist, query)
     return
   end

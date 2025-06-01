@@ -1,4 +1,4 @@
----@module 'mygrep.core.picker.history_picker'
+---@module 'mygrep.core.picker.history_
 ---@brief Displays the memory-based query history
 ---@description
 --- This picker shows previous queries from session, favorites, and persist layers.
@@ -6,7 +6,6 @@
 
 local M = {}
 
-local api = vim.api
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
@@ -87,7 +86,7 @@ function M.open(tool, title, callback, tool_state, last_prompt)
       map("i", "<C-d>", function()
         local sel = action_state.get_selected_entry()
         if sel and sel.value then
-          history.remove(tool_state, sel.value)
+          history.remove_from_all(tool_state, sel.value)
           history.save(tool, tool_state)
           M.open(tool, title, callback, tool_state, last_prompt)
         end
