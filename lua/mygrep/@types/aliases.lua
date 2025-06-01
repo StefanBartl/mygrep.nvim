@@ -14,7 +14,11 @@
 ---"select" => command-line `vim.ui.select()`
 ---@alias ToolPickerStyle '"ui"' | '"select"'
 
----@alias ToolName string Tool identifier used in registry (e.g. "live_grep", "multigrep")
+---Default implemented tools + open string type
+---@alias ToolName "live_grep" | "mutligrep" | string Tool identifier used in registry (e.g. "live_grep", "multigrep")
+
+---Limit for the history and persistent storage
+---@alias Limit number
 
 ---@class ToolState
 ---@field history string[] Session-only queries

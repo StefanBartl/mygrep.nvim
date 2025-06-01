@@ -10,6 +10,10 @@ local M = {}
 M.options = {
   ---@type ToolPickerStyle
   tool_picker_style = "ui",
+  ---@type Limit
+  history_limit = 100,  -- Sets the limit for queries saved to the history storage (RAM) per tool
+  ---@type Limit
+  persist_limit  = 100, -- Maximum number of persisted queries saved to disk (json) per tool
 
   ---@type Keymaps
   keymaps = {
@@ -19,9 +23,14 @@ M.options = {
   },
 }
 
+
+---@overload fun(key: "tool_picker_style"): ToolPickerStyle
+---@overload fun(key: "history_limit"): Limit
+---@overload fun(key: "persist_limit"): Limit
+---@overload fun(key: "Keymaps"): Keymaps
 ---Returns a configured option by key
----@param key string
----@return any | nil
+---@param key ConfigOptions
+---@return ToolName | Keymaps | Limit | nil
 function M.get_option(key)
   return M.options[key] or nil
 end

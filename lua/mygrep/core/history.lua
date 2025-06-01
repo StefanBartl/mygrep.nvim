@@ -3,38 +3,39 @@
 
 local encode = vim.json.encode
 local decode = vim.json.decode
+local get_option = require("mygrep.config").get_option
+--History Utils
+local history_utils = require("mygrep.utils.history_utils")
+local is_valid_query = history_utils.is_valid_query
+local get_storage_path = history_utils.get_storage_path
+local index_of = history_utils.index_of
 
 local M = {}
 
----@param s any
----@return boolean
-local function is_valid_query(s)
-  return type(s) == "string" and s ~= ""
+
+---@private
+---@param tbl table
+---@param query string
+local function remove_from(tbl, query)
+  local idx = index_of(tbl, query)
+  if idx ~= -1 then table.remove(tbl, idx) end
 end
 
----@param t any[]
----@param val any
----@return integer
-local function index_of(t, val)
-  for i, v in ipairs(t) do
-    if v == val then return i end
-  end
-  return -1
-end
 
----@param tool ToolName
----@return string
-local function get_storage_path(tool)
-  local dir = vim.fn.stdpath("data") .. "/mygrep"
-  vim.fn.mkdir(dir, "p")
-  return dir .. "/" .. tool .. ".json"
+---@private
+---@param state ToolState
+---@param query string
+local function remove_all(state, query)
+  if not is_valid_query(query) then return end
+
+  remove_from(state.history, query)
+  remove_from(state.favorites, query)
+  remove_from(state.persist, query)
 end
 
 ---@param tool ToolName
 ---@return ToolState
 function M.get(tool)
-  assert(type(tool) == "string", "[mygrep] tool must be a string")
-
   local state = M[tool]
   if type(state) ~= "table" or type(state.history) ~= "table" then
     M[tool] = {
@@ -47,93 +48,108 @@ function M.get(tool)
   return M[tool]
 end
 
+
 ---@param state ToolState
 ---@param input string
 function M.add_history(state, input)
-  if is_valid_query(input) and state.history[#state.history] ~= input then
-    table.insert(state.history, input)
+  if not is_valid_query(input) then return end
+
+  -- Avoid duplicates anywhere in history
+  for _, entry in ipairs(state.history) do
+    if entry == input then
+      return -- already exists, do not re-add
+    end
+  end
+
+  -- Append new input
+  table.insert(state.history, input)
+
+  -- Enforce history length limit (FIFO)
+  local limit = get_option("history_limit") or 100
+  while #state.history > limit do
+    table.remove(state.history, 1) -- remove oldest
   end
 end
 
+
+---Toggles the query's status in the memory layers:
+---  - If it's a session-only entry: mark as favorite ()
+---  - If it's a favorite: promote to persistent ()
+---  - If it's persistent: remove it from memory
 ---@param state ToolState
 ---@param query string
 function M.toggle_state(state, query)
   if not is_valid_query(query) then return end
 
+  -- Check if it's a favorite
   local fav_idx = index_of(state.favorites, query)
   if fav_idx ~= -1 then
+    -- Promote to persistent: remove from favorites, add to persist
     table.remove(state.favorites, fav_idx)
     table.insert(state.persist, query)
     return
   end
 
+  -- Check if it's already persistent
   local per_idx = index_of(state.persist, query)
   if per_idx ~= -1 then
+    -- Remove it completely from memory (final state)
     table.remove(state.persist, per_idx)
     return
   end
 
+  -- Otherwise, mark it as a new favorite
   table.insert(state.favorites, query)
 end
 
+
+---Toggles state in reverse direction
+---Steps:
+--- 1. Remove the query from all lists (history, favorites, persist)
+--- 2. If it was in `persist`: move to `favorites`
+--- 3. If it was in `favorites`: move to `history` (session)
+--- 4. If it was in `history`: move to `persist`
 ---@param state ToolState
 ---@param query string
 function M.toggle_state_reverse(state, query)
   if not is_valid_query(query) then return end
 
-  -- remove from all lists first
-  local function remove_all()
-    local function remove(t)
-      local i = index_of(t, query)
-      if i ~= -1 then table.remove(t, i) end
-    end
-    remove(state.favorites)
-    remove(state.persist)
-    remove(state.history)
-  end
-
   -- Persistent → Favorite
   if index_of(state.persist, query) ~= -1 then
-    remove_all()
+    remove_all(state, query)
     table.insert(state.favorites, query)
     return
   end
 
   -- Favorite → Session
   if index_of(state.favorites, query) ~= -1 then
-    remove_all()
+    remove_all(state, query)
     table.insert(state.history, query)
     return
   end
 
   -- Session → Persistent
   if index_of(state.history, query) ~= -1 then
-    remove_all()
+    remove_all(state, query)
     table.insert(state.persist, query)
     return
   end
 end
 
----@param state ToolState
----@param query string
-function M.remove(state, query)
-  if not is_valid_query(query) then return end
 
-  local function remove_from(tbl)
-    local idx = index_of(tbl, query)
-    if idx ~= -1 then table.remove(tbl, idx) end
-  end
 
-  remove_from(state.history)
-  remove_from(state.favorites)
-  remove_from(state.persist)
-end
 
 ---@param tool ToolName
 ---@param state ToolState
 function M.save(tool, state)
   local path = get_storage_path(tool)
   local persist = vim.tbl_filter(is_valid_query, state.persist or {})
+
+  -- Limit on number of persisted entries (overrwrites old for new ones)
+  local persist_limit = get_option("persist_limit") or 100
+  if #persist > persist_limit then
+    persist = vim.list_slice(persist, #persist - persist_limit + 1, #persist)
+  end
 
   local ok, json = pcall(encode, { persist = persist })
   if not ok then
@@ -150,6 +166,7 @@ function M.save(tool, state)
   f:write(json)
   f:close()
 end
+
 
 ---@param tool ToolName
 ---@param state ToolState
