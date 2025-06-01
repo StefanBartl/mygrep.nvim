@@ -4,7 +4,6 @@
 --- This module provides helper functions to manage and validate
 --- entries in tool state tables (history, favorites, persist), including
 --- input validation, deduplication, and storage path resolution.
-
 local M = {}
 
 ---Returns true if s is a valid query (string and not empty)

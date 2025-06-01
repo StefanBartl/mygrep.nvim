@@ -3,18 +3,31 @@
 ---@description
 --- This picker shows previous queries from session, favorites, and persist layers.
 --- It allows toggling entries, reordering, deleting, and switching states.
-
 local M = {}
 
+-- Telescope utils
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
-
+-- History utils
 local history = require("mygrep.core.history")
 local history_utils = require("mygrep.utils.history_utils")
+-- Picker utils
 local highlights = require("mygrep.core.picker.highlight")
+
+
+---@private
+---Find index of value in a list
+---@param tbl Storage
+---@param val Query
+local function index_of(tbl, val)
+  for i, v in ipairs(tbl) do
+    if v == val then return i end
+  end
+  return nil
+end
 
 ---Opens the history picker with favorites, persistent, and session entries.
 ---@param tool ToolName
@@ -24,10 +37,8 @@ local highlights = require("mygrep.core.picker.highlight")
 ---@param last_prompt? string
 function M.open(tool, title, callback, tool_state, last_prompt)
   history.load(tool, tool_state)
-
-  local entries, seen = {}, {}
-  -- Set highlights if not already present
   highlights.apply_history_highlights()
+  local entries, seen = {}, {}
 
   ---Adds a query to the display list if not already present
   local function push(tag, val)
@@ -59,13 +70,7 @@ function M.open(tool, title, callback, tool_state, last_prompt)
     })
   end
 
-  ---Find index of value in a list
-  local function index_of(tbl, val)
-    for i, v in ipairs(tbl) do
-      if v == val then return i end
-    end
-    return nil
-  end
+
 
   pickers.new({}, {
     prompt_title = title .. " History",

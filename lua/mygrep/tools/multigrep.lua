@@ -1,19 +1,20 @@
 ---@module 'mygrep.tools.multigrep'
 ---@class ToolMultigrep
 ---@brief Memory-enhanced wrapper for custom rg-based grep with pattern + glob support
+local M = {}
 
+-- Vim Utilities
+local notify = vim.notify
 -- Telescope dependencies
 local finders = require("telescope.finders")
 local pickers = require("telescope.pickers")
 local make_entry = require("telescope.make_entry")
 local conf = require("telescope.config").values
 local sorters = require("telescope.sorters")
-
 -- mygrep core modules
 local picker = require("mygrep.core.picker")
 local history = require("mygrep.core.history")
 
-local M = {}
 
 ---Builds a `ripgrep` command from user input
 ---@param prompt string
@@ -52,7 +53,7 @@ function M.run(opts)
   local tool = "multigrep"
   local state = history.get(tool)
   if not state then
-    vim.notify("[mygrep] Failed to load state for 'multigrep'", vim.log.levels.ERROR)
+    notify("[mygrep] Failed to load state for 'multigrep'", vim.log.levels.ERROR)
     return
   end
 
@@ -60,13 +61,13 @@ function M.run(opts)
 
   picker.open(tool, "Multi Grep", function(input)
     if type(input) ~= "string" or input == "" then
-      vim.notify("[mygrep] Invalid input passed to multigrep", vim.log.levels.WARN)
+      notify("[mygrep] Invalid input passed to multigrep", vim.log.levels.WARN)
       return
     end
 
     local args = command_generator(input)
     if not args then
-      vim.notify("[mygrep] No valid command generated for input", vim.log.levels.WARN)
+      notify("[mygrep] No valid command generated for input", vim.log.levels.WARN)
       return
     end
 

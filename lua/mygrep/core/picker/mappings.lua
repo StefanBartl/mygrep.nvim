@@ -3,11 +3,17 @@
 ---@description
 --- This module defines all <insert> mode mappings for the main query picker.
 --- It includes history navigation, root switching, and query execution.
-
 local M = {}
 
+-- Vim Utilies
+local safe_call = require("mygrep.utils.safe_call").safe_call
+local notify = vim.notify
+local defer_fn = vim.defer_fn
+local schedule = vim.schedule
+-- Telescopr dependencies
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
+-- History Utilies
 local history = require("mygrep.core.history")
 
 ---@param bufnr integer
@@ -20,9 +26,9 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
   map("i", "<F5>", function()
     local input = action_state.get_current_line()
     actions.close(bufnr)
-    vim.defer_fn(function()
+    defer_fn(function()
       require("mygrep.context.search_root").select()
-      vim.defer_fn(function()
+      defer_fn(function()
         require("mygrep.core.picker").open(
           opts.tool, opts.title, opts.callback, opts.tool_state, { default_text = input }
         )
@@ -36,8 +42,13 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
     current_index = (current_index % #opts.combined_history) + 1
     local entry = opts.combined_history[current_index]
     if entry then
-      local ok, picker = pcall(action_state.get_current_picker, bufnr)
-      if ok and picker then picker:reset_prompt(entry) end
+      --Prefer destructuring `ok, picker, err = safe_call(...)` here instead of accessing 
+      --`safe_call(...).result` directly, because LuaLS is able to infer it correctly this wy
+      local ok, picker, err = safe_call(action_state.get_current_picker, bufnr)
+      if ok and picker then picker:reset_prompt(entry)
+      else
+        notify("[mygrep] " .. err, 4)
+      end
     end
   end)
 
@@ -47,8 +58,11 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
     current_index = ((current_index - 2 + #opts.combined_history) % #opts.combined_history) + 1
     local entry = opts.combined_history[current_index]
     if entry then
-      local ok, picker = pcall(action_state.get_current_picker, bufnr)
-      if ok and picker then picker:reset_prompt(entry) end
+      local ok, picker, err = pcall(action_state.get_current_picker, bufnr)
+      if ok and picker then picker:reset_prompt(entry)
+      else
+        notify("[mygrep] " .. err, 4)
+      end
     end
   end)
 
@@ -56,7 +70,7 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
   map("i", "<C-o>", function()
     local input = action_state.get_current_line()
     actions.close(bufnr)
-    vim.defer_fn(function()
+    defer_fn(function()
       require("mygrep.core.picker").open_history_picker(
         opts.tool, opts.title, opts.callback, opts.tool_state, input
       )
@@ -71,7 +85,7 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
     history.add_history(opts.tool_state, input)
     actions.close(bufnr)
 
-    vim.schedule(function()
+    schedule(function()
       if sel and sel.filename and sel.lnum then
         vim.cmd("edit " .. vim.fn.fnameescape(sel.filename))
         local line = vim.fn.getline(sel.lnum)

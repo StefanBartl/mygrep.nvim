@@ -1,12 +1,14 @@
 ---@module 'mygrep.ui.tool_picker'
 ---@brief Delegates tool picking to the configured style
-
 local M = {}
 
 local config = require("mygrep.config")
 local selector_ui = require("mygrep.ui.tool_selector")
 local selector_cmdline = require("mygrep.ui.tool_cmdline_select")
 
+
+---Opens designated selector
+---@return nil
 function M.open()
   local style = config.get_option("tool_picker_style")
 

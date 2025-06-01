@@ -3,24 +3,27 @@
 ---@description
 --- Exposes all registered tools via `:Mygrep` command.
 --- Supports running a named tool directly or opening a prompt to choose one.
-
-local registry = require("mygrep.core.registry")
-local safe_call = require("mygrep.utils.safe_call").safe_call
-
 local M = {}
+
+-- Vim Utilies
+local notify = vim.notify
+-- MyGrep dependencies
+local safe_call = require("mygrep.utils.safe_call").safe_call
+local registry = require("mygrep.core.registry")
+
 
 ---Runs a registered grep tool by name
 ---@param name ToolName
 local function run_tool(name)
   local entry = registry.get(name)
   if not entry or type(entry.run) ~= "function" then
-    vim.notify("[mygrep] Unknown tool: " .. name, vim.log.levels.WARN)
+    notify("[mygrep] Unknown tool: " .. name, vim.log.levels.WARN)
     return
   end
 
   local result = safe_call(entry.run)
   if not result.ok then
-    vim.notify("[mygrep] Tool execution failed: " .. result.err, vim.log.levels.ERROR)
+    notify("[mygrep] Tool execution failed: " .. result.err, vim.log.levels.ERROR)
   end
 end
 
@@ -28,7 +31,7 @@ end
 local function choose_tool()
   local list = registry.list()
   if vim.tbl_isempty(list) then
-    vim.notify("[mygrep] No grep tools registered", vim.log.levels.WARN)
+    notify("[mygrep] No grep tools registered", vim.log.levels.WARN)
     return
   end
 
@@ -40,7 +43,7 @@ local function choose_tool()
   end)
 
   if not ui_ok.ok then
-    vim.notify("[mygrep] Tool chooser failed: " .. ui_ok.err, vim.log.levels.ERROR)
+    notify("[mygrep] Tool chooser failed: " .. ui_ok.err, vim.log.levels.ERROR)
   end
 end
 

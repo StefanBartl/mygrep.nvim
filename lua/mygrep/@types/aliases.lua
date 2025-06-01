@@ -20,11 +20,18 @@
 ---Limit for the history and persistent storage
 ---@alias Limit number
 
+
+---@alias Query string
+---@alias HistoryStorage Query[] Session-only queries
+---@alias FavoritesStorage Query[] Pinned entries always shown on top
+---@alias PersistsStorage Query[] Persisted queries stored on disk
+---@alias Storage HistoryStorage | FavoritesStorage | PersistsStorage
+
+
 ---@class ToolState
----@field history string[] Session-only queries
----@field favorites string[] Pinned entries always shown on top
----@field persist string[] Persisted queries stored on disk
----@field undo? string[] Optional undo stack (last removed entries)
+---@field history HistoryStorage Session-only queries
+---@field favorites FavoritesStorage Pinned entries always shown on top
+---@field persist PersistsStorage Persisted queries stored on disk
 
 ---@alias PickerInternalOpts { title: string, tool: ToolName, callback: fun(...), state: ToolState, default_text?: string }
 ---@alias PickerUserOpts { default_text?: string }

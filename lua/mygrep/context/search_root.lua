@@ -1,20 +1,24 @@
 ---@module 'mygrep.context.search_root'
 ---@brief Manages the current search root (cwd, root, custom, home)
-
 local M = {}
+
+-- Vim Utilities
+local fn = vim.fn
+local ui = vim.ui
+local notify = vim.notify
 
 
 ---@type SearchRootState
 local state = {
   mode = "cwd",
   custom_path = nil,
-  project_dir = vim.fn.getcwd(), -- assume initial working dir is project
+  project_dir = fn.getcwd(), -- assume initial working dir is project
 }
 
 ---Returns current effective path
 ---@return string
 function M.get()
-  return vim.fn.getcwd()
+  return fn.getcwd()
 end
 
 ---Returns current root mode
@@ -28,13 +32,13 @@ local function remember_project_dir()
   if not state.project_dir or state.project_dir == "" then
     local buf_path = vim.api.nvim_buf_get_name(0)
     if buf_path ~= "" then
-      local dir = vim.fn.fnamemodify(buf_path, ":p:h")
-      if vim.fn.isdirectory(dir) == 1 then
+      local dir = fn.fnamemodify(buf_path, ":p:h")
+      if fn.isdirectory(dir) == 1 then
         state.project_dir = dir
         return
       end
     end
-    state.project_dir = vim.fn.getcwd()
+    state.project_dir = fn.getcwd()
   end
 end
 
@@ -42,8 +46,8 @@ end
 ---@param path string
 ---@return string normalized path, or empty string if invalid
 local function normalize_path(path)
-  local resolved = vim.fn.expand(path)
-  if vim.fn.isdirectory(resolved) == 1 then
+  local resolved = fn.expand(path)
+  if fn.isdirectory(resolved) == 1 then
     return resolved
   end
   return ""
@@ -53,21 +57,21 @@ end
 ---@param path string
 ---@param mode SearchRootMode
 local function change_dir(path, mode)
-  local ok, err = pcall(vim.fn.chdir, path)
+  local ok, err = pcall(fn.chdir, path)
   if not ok then
-    vim.notify("[mygrep] Failed to change directory: " .. tostring(err), vim.log.levels.ERROR)
+    notify("[mygrep] Failed to change directory: " .. tostring(err), vim.log.levels.ERROR)
     return
   end
   state.mode = mode
   state.custom_path = (mode == "custom") and path or nil
-  vim.notify("[mygrep] Search root changed to: " .. path, vim.log.levels.INFO)
+  notify("[mygrep] Search root changed to: " .. path, vim.log.levels.INFO)
 end
 
 ---Prompts user to select the new root mode
 function M.select()
   remember_project_dir()
 
-  local cwd = vim.fn.getcwd()
+  local cwd = fn.getcwd()
   local opts = {}
   local current_mode = state.mode
 
@@ -88,7 +92,7 @@ function M.select()
   table.insert(opts, {
     label = label_with_check("󰋞", "Switch to home directory (~)", "home"),
     action = function()
-      local home = vim.fn.expand("~")
+      local home = fn.expand("~")
       change_dir(home, "home")
     end,
   })
@@ -105,19 +109,19 @@ function M.select()
   table.insert(opts, {
     label = "  Enter custom path...",
     action = function()
-      vim.ui.input({ prompt = "Enter directory:" }, function(input)
+      ui.input({ prompt = "Enter directory:" }, function(input)
         if not input then return end
         local path = normalize_path(input)
         if path ~= "" then
           change_dir(path, "custom")
         else
-          vim.notify("[mygrep] Invalid directory: " .. input, vim.log.levels.WARN)
+          notify("[mygrep] Invalid directory: " .. input, vim.log.levels.WARN)
         end
       end)
     end,
   })
 
-  vim.ui.select(opts, {
+  ui.select(opts, {
     prompt = "[mygrep] Current root: " .. cwd,
     format_item = function(item) return item.label end,
   }, function(choice)

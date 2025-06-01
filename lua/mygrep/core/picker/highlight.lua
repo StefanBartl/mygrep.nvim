@@ -3,7 +3,6 @@
 ---@description
 --- Provides shared EntryTag → symbol and highlight group mapping,
 --- as well as highlight setup compatible with Telescope.
-
 local M = {}
 
 
@@ -15,6 +14,7 @@ M.tag_defs = {
 }
 
 ---Ensures highlight groups exist and are linked to defaults
+---@return nil
 function M.apply_history_highlights()
   local api = vim.api
   local links = {

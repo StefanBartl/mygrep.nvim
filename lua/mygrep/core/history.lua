@@ -1,16 +1,18 @@
 ---@module 'mygrep.core.history'
 ---@brief Manages per-tool search history, favorites, and persistent queries
+local M = {}
 
+
+-- Utilities
 local encode = vim.json.encode
 local decode = vim.json.decode
+local safe_call = require("mygrep.utils.safe_call").safe_call
 local get_option = require("mygrep.config").get_option
 --History Utils
 local history_utils = require("mygrep.utils.history_utils")
 local is_valid_query = history_utils.is_valid_query
 local get_storage_path = history_utils.get_storage_path
 local index_of = history_utils.index_of
-
-local M = {}
 
 
 ---@private
@@ -32,11 +34,12 @@ function M.remove_from_all(state, query)
   remove_from_tbl(state.persist, query)
 end
 
+
 ---@param tool ToolName
 ---@return ToolState
 function M.get(tool)
   local state = M[tool]
-  if type(state) ~= "table" or type(state.history) ~= "table" then
+  if type(state) ~= "table" or type(state.history) ~= "table" or type(state.favorites) ~= "table" or type(state.persist) ~= "table"then
     M[tool] = {
       history = {},
       favorites = {},
@@ -173,10 +176,14 @@ end
 function M.load(tool, state)
   local path = get_storage_path(tool)
 
-  local ok, content = pcall(vim.fn.readfile, path)
-  if not ok or not content then return end
+  local read_ok = safe_call(vim.fn.readfile, path)
+  if not read_ok.ok then
+    vim.notify("[mygrep] Failed to read file: " .. tostring(read_ok.err), vim.log.levels.ERROR)
+    return
+  end
 
-  local decoded = decode(table.concat(content, "\n"))
+
+  local decoded = decode(table.concat(read_ok.result, "\n"))
   if type(decoded) == "table" and type(decoded.persist) == "table" then
     state.persist = vim.tbl_filter(is_valid_query, decoded.persist)
   end

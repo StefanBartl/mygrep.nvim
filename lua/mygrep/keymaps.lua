@@ -10,6 +10,24 @@ local registry = require("mygrep.core.registry")
 local config = require("mygrep.config")
 local kmaps = config.get_option("keymaps") or {}
 
+
+---@private
+---@brief Conditionally defines a normal mode keymap if `lhs` is valid.
+---@description
+--- This function is a utility for safely defining keymaps from a config table.
+--- It only applies the keymap if `lhs` is a non-empty string. This avoids
+--- overwriting user mappings when config values are empty or disabled.
+---
+--- Typical use:
+---   map_if("tool", keymaps.live_grep, run_tool, "Run live_grep")
+---
+--- Mappings are always applied in normal mode with `noremap` and `silent` set.
+---
+---@param _ string | false | nil Namespace key or disabled flag (ignored)
+---@param lhs string | false | nil Left-hand side of the mapping (must be non-empty string)
+---@param fn function Function to execute when the keymap is triggered
+---@param desc string Description for the mapping (used in :map and which-key)
+---@return nil
 local function map_if(_, lhs, fn, desc)
   if lhs and lhs ~= "" then
     vim.keymap.set("n", lhs, fn, { noremap = true, silent = true, desc = desc })

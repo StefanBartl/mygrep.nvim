@@ -3,11 +3,14 @@
 ---@description
 --- Uses a centered floating window with a selectable list of registered tools.
 --- The user can navigate and select a tool using <CR>. ESC closes the menu.
+local M = {}
 
+-- Vim Utilities
 local api = vim.api
+local notify = vim.notify
+-- MyGrep dependencies
 local registry = require("mygrep.core.registry")
 
-local M = {}
 
 local state = {
   win = nil,
@@ -16,7 +19,10 @@ local state = {
   ns = api.nvim_create_namespace("MyGrepToolSelector"),
 }
 
+
+---@private
 -- Cleanup function to close window and clear buffer
+---@return nil
 local function close()
   if state.win and api.nvim_win_is_valid(state.win) then
     api.nvim_win_close(state.win, true)
@@ -25,7 +31,10 @@ local function close()
   state.buf = nil
 end
 
+
+---@private
 -- Highlights the active line visually
+---@return nil
 local function update_highlight()
   api.nvim_buf_clear_namespace(state.buf, state.ns, 0, -1)
   local lnum = api.nvim_win_get_cursor(state.win)[1] - 1
@@ -39,11 +48,13 @@ local function update_highlight()
   )
 end
 
+
 ---Opens the floating tool selector
+---@return nil
 function M.open()
   state.tools = registry.list()
   if vim.tbl_isempty(state.tools) then
-    vim.notify("[mygrep] No tools registered", vim.log.levels.WARN)
+    notify("[mygrep] No tools registered", vim.log.levels.WARN)
     return
   end
 
@@ -97,7 +108,7 @@ function M.open()
       if def and def.run then
         def.run()
       else
-        vim.notify("[mygrep] Tool '" .. tool .. "' is invalid", vim.log.levels.ERROR)
+        notify("[mygrep] Tool '" .. tool .. "' is invalid", vim.log.levels.ERROR)
       end
     end
   end, {

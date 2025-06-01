@@ -4,13 +4,13 @@
 ---@description
 --- Provides a live_grep interface with session history, favorites,
 --- and persistent query support using shared mygrep core modules.
+local M = {}
 
 local builtin = require("telescope.builtin")
 local picker = require("mygrep.core.picker")
 local history = require("mygrep.core.history")
 local search_root = require("mygrep.context.search_root")
 
-local M = {}
 
 ---Start a memory-aware live_grep search
 ---@param opts? table Optional Telescope config overrides

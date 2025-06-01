@@ -3,7 +3,6 @@
 ---@description
 --- This module stores and retrieves global plugin options.
 --- Users can override `M.options` during setup() if needed.
-
 local M = {}
 
 ---@type ConfigOptions

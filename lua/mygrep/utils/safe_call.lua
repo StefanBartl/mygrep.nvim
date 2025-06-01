@@ -7,7 +7,6 @@
 ---   { ok = true, result = <T>, err = nil }
 --- or
 ---   { ok = false, result = nil, err = "<string>" }
-
 local M = {}
 
 ---Safely calls a function and returns a structured result

@@ -4,7 +4,6 @@
 --- This module defines the default query prompt using Telescope.
 --- It handles history rotation (<C-n>, <C-p>), root switching (<F5>),
 --- and entry execution. Key mappings are provided via mappings.lua.
-
 local M = {}
 
 -- Telescope APIs

@@ -5,7 +5,6 @@
 --- Internally, it delegates to specialized modules:
 ---  - `main_picker` handles the standard live input UI
 ---  - `history_picker` displays memory entries (favorites, persist, session)
-
 local M = {}
 
 -- Submodules

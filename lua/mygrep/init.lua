@@ -8,11 +8,13 @@
 --- @see mygrep.core.registry
 --- @see mygrep.tools.live_grep
 --- @see mygrep.tools.multigrep
+local M = {}
 
+-- Vim
+local notify = vim.notify
 -- Core
 local registry = require("mygrep.core.registry")
 local config = require("mygrep.config")
-
 -- Tools
 local live_grep = require("mygrep.tools.live_grep")
 local multigrep = require("mygrep.tools.multigrep")
@@ -31,8 +33,6 @@ registry.register("multigrep", {
 -- Setup UI integrations
 require("mygrep.usercommands")
 
--- Public API
-local M = {}
 
 ---Plugin setup function (called by user)
 ---@param opts ConfigOptions
@@ -44,13 +44,13 @@ function M.setup(opts)
           if config.options.keymaps[name] ~= nil then
             config.options.keymaps[name] = lhs
           else
-            vim.notify("[mygrep] Unknown keymap: " .. name, vim.log.levels.WARN)
+            notify("[mygrep] Unknown keymap: " .. name, vim.log.levels.WARN)
           end
         end
       elseif config.options[k] ~= nil then
         config.options[k] = v
       else
-        vim.notify("[mygrep] Unknown config option: " .. k, vim.log.levels.WARN)
+        notify("[mygrep] Unknown config option: " .. k, vim.log.levels.WARN)
       end
     end
   end

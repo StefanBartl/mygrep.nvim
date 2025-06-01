@@ -4,11 +4,11 @@
 --- Provides dynamic registration and retrieval of grep tools.
 --- Tools are registered with a unique name and a run entrypoint.
 --- Other modules can lookup tools by name to invoke them generically.
+local M = {}
 
 ---@type RegistryTable
 local tools = {}
 
-local M = {}
 
 ---Validates a registry entry
 ---@param entry any
@@ -16,6 +16,7 @@ local M = {}
 local function is_valid_entry(entry)
   return type(entry) == "table" and type(entry.run) == "function"
 end
+
 
 ---Registers a new grep tool
 ---@param name ToolName
@@ -30,12 +31,14 @@ function M.register(name, entry)
   return true
 end
 
+
 ---Retrieves a tool by name
 ---@param name ToolName
 ---@return RegistryEntry|nil
 function M.get(name)
   return tools[name]
 end
+
 
 ---Returns all registered tool names
 ---@return ToolName[]
