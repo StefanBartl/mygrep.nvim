@@ -27,7 +27,7 @@ M.options = {
 ---@overload fun(key: "tool_picker_style"): ToolPickerStyle
 ---@overload fun(key: "history_limit"): Limit
 ---@overload fun(key: "persist_limit"): Limit
----@overload fun(key: "Keymaps"): Keymaps
+---@overload fun(key: "keymaps"): Keymaps
 ---Returns a configured option by key
 ---@param key ConfigOptions
 ---@return ToolName | Keymaps | Limit | nil

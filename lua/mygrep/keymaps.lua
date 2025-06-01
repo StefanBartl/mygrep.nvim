@@ -10,15 +10,12 @@ local registry = require("mygrep.core.registry")
 local config = require("mygrep.config")
 local kmaps = config.get_option("keymaps") or {}
 
-local function map_if(key, lhs, fn, desc)
+local function map_if(_, lhs, fn, desc)
   if lhs and lhs ~= "" then
     vim.keymap.set("n", lhs, fn, { noremap = true, silent = true, desc = desc })
   end
 end
 
-local function map(mode, lhs, rhs, desc)
-  vim.keymap.set(mode, lhs, rhs, { noremap = true, silent = true, desc = desc })
-end
 
 -- Tool Picker
 map_if("open", kmaps.open, require("mygrep.ui.tool_picker").open, "[mygrep] Open tool selector")

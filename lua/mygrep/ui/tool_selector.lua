@@ -29,7 +29,14 @@ end
 local function update_highlight()
   api.nvim_buf_clear_namespace(state.buf, state.ns, 0, -1)
   local lnum = api.nvim_win_get_cursor(state.win)[1] - 1
-  api.nvim_buf_add_highlight(state.buf, state.ns, "Visual", lnum, 0, -1)
+  vim.highlight.range(
+    state.buf,
+    state.ns,
+    "Visual",
+    { lnum, 0 },
+    { lnum, -1 },
+    { inclusive = true }
+  )
 end
 
 ---Opens the floating tool selector
@@ -50,8 +57,8 @@ function M.open()
 
   state.buf = api.nvim_create_buf(false, true)
   api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
-  api.nvim_buf_set_option(state.buf, "modifiable", false)
-  api.nvim_buf_set_option(state.buf, "filetype", "mygrep_tool_selector")
+  vim.bo[state.buf].modifiable = false
+  vim.bo[state.buf].filetype = "mygrep_tool_selector"
 
   local width = 40
   local height = #lines + 2
@@ -68,34 +75,36 @@ function M.open()
   }
 
   state.win = api.nvim_open_win(state.buf, true, win_opts)
-  api.nvim_win_set_option(state.win, "cursorline", true)
+  vim.wo[state.win].cursorline = true
 
   -- Initial highlight
   update_highlight()
 
   -- Keymaps (local to buffer)
-  local opts = { buffer = state.buf, nowait = true, silent = true }
-
-  api.nvim_buf_set_keymap(state.buf, "n", "<Esc>", "", {
-    callback = close, desc = "Close tool selector", noremap = true
+  vim.keymap.set("n", "<Esc>", close, {
+    buffer = state.buf,
+    desc = "Close tool selector",
+    noremap = true,
+    silent = true,
   })
 
-  api.nvim_buf_set_keymap(state.buf, "n", "<CR>", "", {
-    callback = function()
-      local line = api.nvim_win_get_cursor(state.win)[1]
-      local tool = state.tools[line]
-      close()
-      if tool then
-        local def = registry.get(tool)
-        if def and def.run then
-          def.run()
-        else
-          vim.notify("[mygrep] Tool '" .. tool .. "' is invalid", vim.log.levels.ERROR)
-        end
+  vim.keymap.set("n", "<CR>", function()
+    local line = api.nvim_win_get_cursor(state.win)[1]
+    local tool = state.tools[line]
+    close()
+    if tool then
+      local def = registry.get(tool)
+      if def and def.run then
+        def.run()
+      else
+        vim.notify("[mygrep] Tool '" .. tool .. "' is invalid", vim.log.levels.ERROR)
       end
-    end,
+    end
+  end, {
+    buffer = state.buf,
     desc = "Run selected tool",
-    noremap = true
+    noremap = true,
+    silent = true,
   })
 
   api.nvim_create_autocmd("CursorMoved", {
@@ -106,3 +115,4 @@ function M.open()
 end
 
 return M
+

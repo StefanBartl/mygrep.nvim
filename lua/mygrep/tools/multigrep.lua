@@ -71,7 +71,7 @@ function M.run(opts)
     end
 
     opts = opts or {}
-    local cwd = opts.cwd or (vim.uv and vim.uv.cwd()) or vim.fn.getcwd()
+    local cwd = opts.cwd or (vim.uv and vim.fn.getcwd()) or vim.fn.getcwd()
 
     pickers.new(opts, {
       prompt_title = "Multi Grep",
