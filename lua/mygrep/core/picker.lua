@@ -1,14 +1,22 @@
 ---@module 'mygrep.core.picker'
+---@brief
+---@description
+---
 ---@class Picker
+local M = {}
 
+
+-- Telescope APIs
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local pickers = require("telescope.pickers")
 local finders = require("telescope.finders")
 local conf = require("telescope.config").values
-local history = require("mygrep.core.history")
 
-local M = {}
+-- MyGrep internals
+local history = require("mygrep.core.history")
+local history_utils = require("mygrep.utils.history_utils")
+
 
 ---Returns the index of a value in a list or nil
 ---@param t table
@@ -21,6 +29,13 @@ local function tbl_indexof(t, val)
   return nil
 end
 
+
+---Opens the main picker for a given tool
+---@param tool ToolName
+---@param title string
+---@param callback fun(query: string)
+---@param tool_state ToolState
+---@param opts? PickerUserOpts
 function M.open(tool, title, callback, tool_state, opts)
   opts = opts or {}
 
@@ -30,22 +45,7 @@ function M.open(tool, title, callback, tool_state, opts)
   end
 
   local default_text = opts.default_text or ""
-
-  -- Merge all known entries (history, favorites, persist) into flat list
-  local function build_combined_history(state)
-    local result, seen = {}, {}
-    for _, list in ipairs({ state.history, state.favorites, state.persist }) do
-      for _, entry in ipairs(list) do
-        if not seen[entry] and type(entry) == "string" and entry ~= "" then
-          table.insert(result, entry)
-          seen[entry] = true
-        end
-      end
-    end
-    return result
-  end
-
-  local combined_history = build_combined_history(tool_state)
+  local combined_history = history_utils.build_combined_history(tool_state)
   local current_index = #combined_history + 1
 
   require("telescope.builtin").live_grep({
@@ -117,6 +117,13 @@ function M.open(tool, title, callback, tool_state, opts)
   })
 end
 
+
+---Opens the history picker (favorites, persist, session)
+---@param tool ToolName
+---@param title string
+---@param callback fun(query: string)
+---@param tool_state ToolState
+---@param last_prompt? string
 function M.open_history_picker(tool, title, callback, tool_state, last_prompt)
   history.load(tool, tool_state)
 
@@ -127,12 +134,8 @@ function M.open_history_picker(tool, title, callback, tool_state, last_prompt)
   vim.api.nvim_set_hl(0, "MyGrepPersist", { link = "TelescopeResultsOperator", default = true })
   vim.api.nvim_set_hl(0, "MyGrepSession", { link = "Comment", default = true })
 
-  local function is_valid(s)
-    return type(s) == "string" and s ~= ""
-  end
-
   local function push(tag, val)
-    if is_valid(val) and not seen[val] then
+    if history_utils.is_valid_query(val) and not seen[val] then
       seen[val] = true
 
       local symbol = ({
@@ -212,7 +215,7 @@ function M.open_history_picker(tool, title, callback, tool_state, last_prompt)
         local sel = action_state.get_selected_entry()
         if not sel or not sel.value then return end
 
-        -- optional: Confirmation for persistent deletion
+        -- Confirmation for persistent deletion
         local is_persistent = vim.tbl_contains(tool_state.persist or {}, sel.value)
         if is_persistent then
           vim.ui.input({ prompt = "[mygrep] Remove persistent query from file? [y/n]: " }, function(answer)

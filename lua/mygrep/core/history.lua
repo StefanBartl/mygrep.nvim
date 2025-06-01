@@ -138,7 +138,7 @@ end
 
 
 
-
+---Writes a querie to th tool path json file
 ---@param tool ToolName
 ---@param state ToolState
 function M.save(tool, state)
@@ -168,6 +168,7 @@ function M.save(tool, state)
 end
 
 
+---Loads the persistent table form the json file and sets the them to state.persistent in the RAM
 ---@param tool ToolName
 ---@param state ToolState
 function M.load(tool, state)
