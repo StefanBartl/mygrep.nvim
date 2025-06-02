@@ -46,12 +46,13 @@ function M.open(tool, title, callback, tool_state, last_prompt)
       seen[val] = true
       local def = highlights.tag_defs[tag] or { symbol = "  ", hl = "Comment" }
       local width = vim.fn.strdisplaywidth(def.symbol)
+      local display_buf = { def.symbol, val }
 
       table.insert(entries, {
         tag = tag,
         value = val,
         ordinal = val,
-        display = def.symbol .. val,
+        display = table.concat(display_buf),
         display_highlights = { { 0, width, def.hl } },
       })
     end

@@ -19,6 +19,7 @@ local config = require("mygrep.config")
 local live_grep = require("mygrep.tools.live_grep")
 local multigrep = require("mygrep.tools.multigrep")
 
+
 -- Register built-in tools
 registry.register("live_grep", {
   name = "live_grep",

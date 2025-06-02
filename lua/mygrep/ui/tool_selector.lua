@@ -64,7 +64,10 @@ function M.open()
     return a < b
   end)
 
-  local lines = vim.tbl_map(function(t) return "  🔍  " .. t end, state.tools)
+  local lines = {}
+  for i = 1, #state.tools do
+    lines[i] = string.format("  🔍  %s", state.tools[i])
+  end
 
   state.buf = api.nvim_create_buf(false, true)
   api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)

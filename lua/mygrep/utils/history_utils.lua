@@ -24,14 +24,24 @@ function M.index_of(t, val)
   return -1
 end
 
+-- Weak memoization cache for tool paths
+local path_cache = setmetatable({}, { __mode = "k" }) ---@type table<ToolName, string>
+
 ---Returns the tool-specific file path for persistent storage
 ---@param tool ToolName
 ---@return string
 function M.get_storage_path(tool)
+  local path = path_cache[tool]
+  if path then return path end
+
   local dir = vim.fn.stdpath("data") .. "/mygrep"
   vim.fn.mkdir(dir, "p")
-  return dir .. "/" .. tool .. ".json"
+
+  path = dir .. "/" .. tool .. ".json"
+  path_cache[tool] = path
+  return path
 end
+
 
 ---Builds a deduplicated, flat history list from all categories
 ---@param state ToolState
