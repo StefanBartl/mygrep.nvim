@@ -1,16 +1,10 @@
 ---@module 'mygrep.ui.tool_selector'
 ---@brief Displays a floating UI to select a grep tool
----@description
---- Uses a centered floating window with a selectable list of registered tools.
---- The user can navigate and select a tool using <CR>. ESC closes the menu.
 local M = {}
 
--- Vim Utilities
 local api = vim.api
 local notify = vim.notify
--- MyGrep dependencies
 local registry = require("mygrep.core.registry")
-
 
 local state = {
   win = nil,
@@ -19,10 +13,6 @@ local state = {
   ns = api.nvim_create_namespace("MyGrepToolSelector"),
 }
 
-
----@private
--- Cleanup function to close window and clear buffer
----@return nil
 local function close()
   if state.win and api.nvim_win_is_valid(state.win) then
     api.nvim_win_close(state.win, true)
@@ -31,11 +21,8 @@ local function close()
   state.buf = nil
 end
 
-
----@private
--- Highlights the active line visually
----@return nil
 local function update_highlight()
+  if not state.buf or not state.win then return end
   api.nvim_buf_clear_namespace(state.buf, state.ns, 0, -1)
   local lnum = api.nvim_win_get_cursor(state.win)[1] - 1
   vim.highlight.range(
@@ -48,25 +35,32 @@ local function update_highlight()
   )
 end
 
-
----Opens the floating tool selector
----@return nil
 function M.open()
-  state.tools = registry.list()
-  if vim.tbl_isempty(state.tools) then
+  local all_tools = registry.list()
+  if vim.tbl_isempty(all_tools) then
     notify("[mygrep] No tools registered", vim.log.levels.WARN)
     return
   end
 
+  local current_file = vim.fn.expand("%:p")
+  state.tools = {}
+
+  for _, name in ipairs(all_tools) do
+    local disabled = (name == "multigrep_file") and (current_file == "")
+    table.insert(state.tools, { name = name, disabled = disabled })
+  end
+
+  -- Sort tools (live_grep always first)
   table.sort(state.tools, function(a, b)
-    if a == "live_grep" then return true end
-    if b == "live_grep" then return false end
-    return a < b
+    if a.name == "live_grep" then return true end
+    if b.name == "live_grep" then return false end
+    return a.name < b.name
   end)
 
   local lines = {}
-  for i = 1, #state.tools do
-    lines[i] = string.format("  🔍  %s", state.tools[i])
+  for i, tool in ipairs(state.tools) do
+    local icon = tool.disabled and "" or "🔍"
+    lines[i] = string.format("  %s  %s", icon, tool.name)
   end
 
   state.buf = api.nvim_create_buf(false, true)
@@ -91,10 +85,8 @@ function M.open()
   state.win = api.nvim_open_win(state.buf, true, win_opts)
   vim.wo[state.win].cursorline = true
 
-  -- Initial highlight
   update_highlight()
 
-  -- Keymaps (local to buffer)
   vim.keymap.set("n", "<Esc>", close, {
     buffer = state.buf,
     desc = "Close tool selector",
@@ -102,16 +94,17 @@ function M.open()
     silent = true,
   })
 
+  -- Tool execution
   vim.keymap.set("n", "<CR>", function()
     local line = api.nvim_win_get_cursor(state.win)[1]
-    local tool = state.tools[line]
+    local entry = state.tools[line]
     close()
-    if tool then
-      local def = registry.get(tool)
+    if entry and not entry.disabled then
+      local def = registry.get(entry.name)
       if def and def.run then
         def.run()
       else
-        notify("[mygrep] Tool '" .. tool .. "' is invalid", vim.log.levels.ERROR)
+        notify("[mygrep] Tool '" .. entry.name .. "' is invalid", vim.log.levels.ERROR)
       end
     end
   end, {
@@ -121,12 +114,34 @@ function M.open()
     silent = true,
   })
 
+
+  local function move_cursor(delta)
+    local line = api.nvim_win_get_cursor(state.win)[1]
+    local new_line = line + delta
+    if new_line < 1 then new_line = #state.tools end
+    if new_line > #state.tools then new_line = 1 end
+    api.nvim_win_set_cursor(state.win, { new_line, 0 })
+    update_highlight()
+  end
+
+  vim.keymap.set("n", "k", function() move_cursor(-1) end, { buffer = state.buf })
+  vim.keymap.set("n", "j", function() move_cursor(1) end, { buffer = state.buf })
+  vim.keymap.set("n", "<Up>", function() move_cursor(-1) end, { buffer = state.buf })
+  vim.keymap.set("n", "<Down>", function() move_cursor(1) end, { buffer = state.buf })
+
+  -- Autoclose on focus loss
+  api.nvim_create_autocmd("WinLeave", {
+    buffer = state.buf,
+    callback = function()
+      vim.defer_fn(close, 30)
+    end,
+    once = true,
+  })
+
   api.nvim_create_autocmd("CursorMoved", {
     buffer = state.buf,
     callback = update_highlight,
-    once = false,
   })
 end
 
 return M
-
