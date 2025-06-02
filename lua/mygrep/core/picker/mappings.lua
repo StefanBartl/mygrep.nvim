@@ -40,6 +40,7 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
   map("i", "<C-n>", function()
     if #opts.combined_history == 0 then return end
 
+
     current_index = (current_index % #opts.combined_history) + 1
     local entry = opts.combined_history[current_index]
 
@@ -66,6 +67,7 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
   ---Cycles to previous query in memory
   map("i", "<C-p>", function()
     if #opts.combined_history == 0 then return end
+
 
     current_index = ((current_index - 2 + #opts.combined_history) % #opts.combined_history) + 1
     local entry = opts.combined_history[current_index]
@@ -122,4 +124,3 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
 end
 
 return M
-
