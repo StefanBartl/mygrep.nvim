@@ -20,7 +20,7 @@ local history = require("mygrep.core.history")
 ---@param map fun(mode: string, lhs: string, rhs: function)
 ---@param opts PickerMappingParams
 function M.attach_main_picker_mappings(bufnr, map, opts)
-  local current_index = #opts.combined_history + 1
+  local current_index = (#opts.combined_history > 0) and #opts.combined_history + 1 or 0
 
   ---Reopens root selector, then restores picker with current input
   map("i", "<F5>", function()
@@ -39,32 +39,54 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
   ---Cycles to next query in memory
   map("i", "<C-n>", function()
     if #opts.combined_history == 0 then return end
+
     current_index = (current_index % #opts.combined_history) + 1
     local entry = opts.combined_history[current_index]
-    if entry then
-      --Prefer destructuring `ok, picker, err = safe_call(...)` here instead of accessing 
-      --`safe_call(...).result` directly, because LuaLS is able to infer it correctly this wy
-      local ok, picker, err = safe_call(action_state.get_current_picker, bufnr)
-      if ok and picker then picker:reset_prompt(entry)
-      else
-        notify("[mygrep] " .. err, 4)
+
+    if not entry then return end
+
+    local ok, picker, err = safe_call(action_state.get_current_picker, bufnr)
+    if ok and picker then
+      picker:reset_prompt(entry)
+    else
+      -- Try fallback: reset to first known valid query
+      local fallback = opts.combined_history[1]
+      if fallback then
+        local ok_fallback, picker_fallback = safe_call(action_state.get_current_picker, bufnr)
+        if ok_fallback and picker_fallback then
+          picker_fallback:reset_prompt(fallback)
+        else
+          notify("[mygrep] Picker error: " .. (err or "Unknown error"), vim.log.levels.ERROR)
+        end
       end
     end
   end)
 
+
   ---Cycles to previous query in memory
   map("i", "<C-p>", function()
     if #opts.combined_history == 0 then return end
+
     current_index = ((current_index - 2 + #opts.combined_history) % #opts.combined_history) + 1
     local entry = opts.combined_history[current_index]
-    if entry then
-      local ok, picker, err = pcall(action_state.get_current_picker, bufnr)
-      if ok and picker then picker:reset_prompt(entry)
-      else
-        notify("[mygrep] " .. err, 4)
+    if not entry then return end
+
+    local ok, picker, err = safe_call(action_state.get_current_picker, bufnr)
+    if ok and picker then
+      picker:reset_prompt(entry)
+    else
+      local fallback = opts.combined_history[1]
+      if fallback then
+        local ok_fallback, picker_fallback = safe_call(action_state.get_current_picker, bufnr)
+        if ok_fallback and picker_fallback then
+          picker_fallback:reset_prompt(fallback)
+        else
+          notify("[mygrep] Picker error: " .. (err or "Unknown error"), vim.log.levels.ERROR)
+        end
       end
     end
   end)
+
 
   ---Switch to full history picker
   map("i", "<C-o>", function()
