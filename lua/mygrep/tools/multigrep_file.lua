@@ -12,6 +12,7 @@ local make_entry = require("telescope.make_entry")
 local conf = require("telescope.config").values
 local sorters = require("telescope.sorters")
 -- mygrep core modules
+local picker = require("mygrep.core.picker")
 local history = require("mygrep.core.history")
 
 
@@ -63,10 +64,13 @@ function M.run(opts)
 
   -- Titel und Dateiname
   local filename = vim.fn.expand("%:t")
-  local prompt_title = "Multi Grep: " .. filename
+  local prompt_title = "Multi Grep File: " .. filename
+
+  local default_text = opts.default_text or "  " .. filename
 
   pickers.new(opts, {
     prompt_title = prompt_title,
+    default_text = default_text,
     debounce = 100,
     finder = finders.new_async_job {
       command_generator = function(prompt)
@@ -78,6 +82,13 @@ function M.run(opts)
     previewer = conf.grep_previewer(opts),
     sorter = sorters.empty(),
   }):find()
+
+  vim.schedule(function()
+    local win = vim.api.nvim_get_current_win()
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_set_cursor(win, { 1, 0 })
+    end
+  end)
 end
 
 return M

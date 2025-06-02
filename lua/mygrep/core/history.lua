@@ -4,6 +4,7 @@ local M = {}
 
 
 -- Utilities
+local notify = vim.notify
 local encode = vim.json.encode
 local decode = vim.json.decode
 local safe_call = require("mygrep.utils.safe_call").safe_call
@@ -34,12 +35,11 @@ function M.remove_from_all(state, query)
   remove_from_tbl(state.persist, query)
 end
 
-
 ---@param tool ToolName
 ---@return ToolState
 function M.get(tool)
   local state = M[tool]
-  if type(state) ~= "table" or type(state.history) ~= "table" or type(state.favorites) ~= "table" or type(state.persist) ~= "table"then
+  if type(state) ~= "table" or type(state.history) ~= "table" or type(state.favorites) ~= "table" or type(state.persist) ~= "table" then
     M[tool] = {
       history = {},
       favorites = {},
@@ -49,7 +49,6 @@ function M.get(tool)
 
   return M[tool]
 end
-
 
 ---@param state ToolState
 ---@param input string
@@ -72,7 +71,6 @@ function M.add_history(state, input)
     table.remove(state.history, 1) -- remove oldest
   end
 end
-
 
 ---Toggles the query's status in the memory layers:
 ---  - If it's a session-only entry: mark as favorite ()
@@ -103,7 +101,6 @@ function M.toggle_state(state, query)
   -- Otherwise, mark it as a new favorite
   table.insert(state.favorites, query)
 end
-
 
 ---Toggles state in reverse direction
 ---Steps:
@@ -138,8 +135,6 @@ function M.toggle_state_reverse(state, query)
   end
 end
 
-
-
 ---Writes a querie to th tool path json file
 ---@param tool ToolName
 ---@param state ToolState
@@ -161,7 +156,7 @@ function M.save(tool, state)
 
   local f, err = io.open(path, "w")
   if not f then
-    vim.notify("[mygrep] Failed to write file: " .. err, vim.log.levels.ERROR)
+    notify("[mygrep] Failed to write file: " .. err, vim.log.levels.ERROR)
     return
   end
 
@@ -169,8 +164,7 @@ function M.save(tool, state)
   f:close()
 end
 
-
----Loads the persistent table form the json file and sets the them to state.persistent in the RAM
+---Loads the persistent table from the json file and sets them in RAM
 ---@param tool ToolName
 ---@param state ToolState
 function M.load(tool, state)
@@ -178,10 +172,11 @@ function M.load(tool, state)
 
   local read_ok = safe_call(vim.fn.readfile, path)
   if not read_ok.ok then
-    vim.notify("[mygrep] Failed to read file: " .. tostring(read_ok.err), vim.log.levels.ERROR)
+    local msg = tostring(read_ok.err)
+    if msg:match("E484") then return end -- expected if file doesn't exist
+    notify("[mygrep] Failed to read file: " .. msg, vim.log.levels.ERROR)
     return
   end
-
 
   local decoded = decode(table.concat(read_ok.result, "\n"))
   if type(decoded) == "table" and type(decoded.persist) == "table" then
