@@ -1,5 +1,5 @@
----@module 'mygrep.tools.multigrep'
----@class ToolMultigrep
+---@module 'mygrep.tools.multigrep_file'
+---@class ToolMultigrepFile
 ---@brief Memory-enhanced wrapper for custom rg-based grep with pattern + glob support
 local M = {}
 
@@ -12,9 +12,9 @@ local make_entry = require("telescope.make_entry")
 local conf = require("telescope.config").values
 local sorters = require("telescope.sorters")
 -- mygrep core modules
-local picker = require("mygrep.core.picker")
+local history_utils = require("mygrep.utils.history_utils")
+local multigrep_mappings = require("mygrep.core.picker.multigrep_mappings")
 local history = require("mygrep.core.history")
-
 
 ---Builds a `ripgrep` command from user input
 ---@param prompt string
@@ -61,12 +61,10 @@ function M.run(opts)
 
   opts = opts or {}
   local cwd = opts.cwd or vim.fn.getcwd()
-
-  -- Titel und Dateiname
   local filename = vim.fn.expand("%:t")
   local prompt_title = "Multi Grep File: " .. filename
-
-  local default_text = opts.default_text or "  " .. filename
+  local default_text = opts.default_text or ("  " .. filename)
+  local combined_history = history_utils.build_combined_history(state)
 
   pickers.new(opts, {
     prompt_title = prompt_title,
@@ -81,6 +79,29 @@ function M.run(opts)
     },
     previewer = conf.grep_previewer(opts),
     sorter = sorters.empty(),
+    attach_mappings = function(bufnr, map)
+      multigrep_mappings.attach(bufnr, map, {
+        tool = tool,
+        title = prompt_title,
+        callback = function(input)
+          local args = command_generator(input)
+          if not args then
+            notify("[mygrep] Invalid input", vim.log.levels.WARN)
+            return
+          end
+          vim.defer_fn(function()
+            vim.cmd("stopinsert")
+            vim.schedule(function()
+              M.run({ cwd = cwd, default_text = input })
+            end)
+          end, 10)
+        end,
+        tool_state = state,
+        combined_history = combined_history,
+        last_prompt = "",
+      })
+      return true
+    end,
   }):find()
 
   vim.schedule(function()

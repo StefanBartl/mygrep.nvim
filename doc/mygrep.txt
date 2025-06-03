@@ -134,7 +134,7 @@ three categories:
        Persistent   → saved to disk and restored across sessions
 
 When you submit a query (<CR>), it is added to session memory if not already
-present. You can toggle the state of saved entries via the 
+present. You can toggle the state of saved entries via the
 history picker (|mygrep-picker|):
 
     <Tab>     S →  →  → (removed)
@@ -174,7 +174,7 @@ Format:
 
     <search_term>
 
-Real-time search as you type (ripgrep-powered). It's ideal for general-purpose 
+Real-time search as you type (ripgrep-powered). It's ideal for general-purpose
 search across all files in the current root (see |mygrep-root|).
 
 Examples:
@@ -196,7 +196,7 @@ Format:
 
     <search_term>  <file_glob>
 
-The pattern and glob must be separated by TWO spaces. 
+The pattern and glob must be separated by TWO spaces.
 Globs follow ripgrep (-g) syntax.
 
 Examples:
@@ -216,10 +216,37 @@ Globs reference:
 > https://github.com/BurntSushi/ripgrep/blob/master/GLOB.md
 
 ==============================================================================
+MULTIGREP FILE USAGE                                   *mygrep-multigrep_file*
+
+`multigrep_file` is a variant of `multigrep` scoped to the currently open file.
+
+When triggered, it:
+  - pre-fills the current filename as a file glob
+  - places the cursor before it so you can type your pattern directly
+
+Format:
+
+    <search_term>  <current_filename>
+
+Examples:
+
+    TODO            → searches for TODO in the current file
+    error           → searches for error in the current file
+    (default text)  → "  current_file.lua" ← cursor is placed here
+
+Tip:
+  This is especially useful for quickly isolating patterns in large files
+  or when working on a single module.
+
+Available via:
+
+    :Mygrep multigrep_file
+
+==============================================================================
 CREDITS
 
 Created by Stefan Bartl
-Inspired by Telescope.nvim
+Inspired by Telescope.nvim & TeeJ
 
 ==============================================================================
 SEE ALSO
@@ -235,4 +262,3 @@ SEE ALSO
 |mygrep-multigrep|    Multigrep input format and examples
 
 vim:tw=78:ts=8:ft=help:norl:
-

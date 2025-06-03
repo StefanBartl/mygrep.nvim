@@ -177,6 +177,9 @@ registry.register("grep_open_files", {
 * **`multigrep`**: search against filenames and glob patterns using multiple fields (`pattern *.lua`)
   → powered by `rg`, supports `-e` and `-g` arguments dynamically
 
+* **`multigrep_file`**: like `multigrep`, but scoped to the currently open file
+  → pre-fills the filename as `-g <filename>` and sets the cursor before it
+
 ---
 
 ## Help

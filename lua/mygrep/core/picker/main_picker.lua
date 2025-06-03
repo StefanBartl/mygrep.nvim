@@ -33,6 +33,21 @@ function M.open(tool, title, callback, tool_state, opts)
     prompt_title = title,
     default_text = default_text,
     attach_mappings = function(bufnr, map)
+      local picker_state = require("mygrep.state.picker_state")
+      local action_state = require("telescope.actions.state")
+
+      local ok, picker = pcall(action_state.get_current_picker, bufnr)
+      if ok and picker then
+        picker_state.set(picker)
+      end
+
+      vim.api.nvim_create_autocmd("WinClosed", {
+        buffer = bufnr,
+        callback = function()
+          picker_state.clear()
+        end,
+      })
+
       mappings.attach_main_picker_mappings(bufnr, map, {
         tool = tool,
         title = title,
@@ -47,4 +62,3 @@ function M.open(tool, title, callback, tool_state, opts)
 end
 
 return M
-
