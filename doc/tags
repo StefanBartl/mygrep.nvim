@@ -1,0 +1,10 @@
+:Mygrep	mygrep.txt	/*:Mygrep*
+keybindings	mygrep.txt	/*keybindings*
+mygrep-livegrep	mygrep.txt	/*mygrep-livegrep*
+mygrep-multigrep	mygrep.txt	/*mygrep-multigrep*
+mygrep-multigrep_file	mygrep.txt	/*mygrep-multigrep_file*
+mygrep-picker	mygrep.txt	/*mygrep-picker*
+mygrep-root	mygrep.txt	/*mygrep-root*
+mygrep.core.history	mygrep.txt	/*mygrep.core.history*
+mygrep.core.registry	mygrep.txt	/*mygrep.core.registry*
+usage	mygrep.txt	/*usage*

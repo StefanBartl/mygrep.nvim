@@ -24,7 +24,7 @@ local picker_state = require("mygrep.state.picker_state")
 function M.attach_main_picker_mappings(bufnr, map, opts)
   local current_index = (#opts.combined_history > 0) and #opts.combined_history + 1 or 0
 
-  ---Reopens root selector, then restores picker with current input
+  --- Opens root selector, then restores picker with current input
   map("i", "<F5>", function()
     local input = action_state.get_current_line()
     actions.close(bufnr)
@@ -84,7 +84,6 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
     end, 10)
   end)
 
-  ---Default action: run or jump to file
   actions.select_default:replace(function()
     local input = action_state.get_current_line()
     local sel = action_state.get_selected_entry()
@@ -92,7 +91,7 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
     history.add_history(opts.tool_state, input)
     actions.close(bufnr)
 
-    schedule(function()
+    vim.defer_fn(function()
       if sel and sel.filename and sel.lnum then
         vim.cmd("edit " .. vim.fn.fnameescape(sel.filename))
         local line = vim.fn.getline(sel.lnum)
@@ -102,7 +101,7 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
       else
         opts.callback(input)
       end
-    end)
+    end, 50)
   end)
 end
 
