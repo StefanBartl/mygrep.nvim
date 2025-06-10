@@ -1,11 +1,4 @@
-    __  __        _____                
-   |  \/  |      / ____|               
-   | \  / |_   _| |  __ _ __ ___ _ __  
-   | |\/| | | | | | |_ | '__/ _ \ '_ \ 
-   | |  | | |_| | |__| | | |  __/ |_) |
-   |_|  |_|\__, |\_____|_|  \___| .__/ 
-            __/ |               | |    
-           |___/                |_|    
+![mygrep_small_violett](https://github.com/user-attachments/assets/ddbcd453-633f-4b02-b1ff-b3ddc3cf58c3)
 
 ![version](https://img.shields.io/badge/version-0.1-blue.svg)
 ![license](https://img.shields.io/github/license/StefanBartl/mygrep.nvim)
@@ -21,6 +14,7 @@
 - 🧠 Remembers your previous queries in a session
 -  Toggle favorites and  mark persistent queries
 - 🔁 Reorder queries (⇧/⇩) inside history picker
+
 - 🔄 Navigate query memory via `<C-n>` and `<C-p>`
 - ⛅ Choose between floating UI or command-line select
 - 🧩 Easily extend with your own tools
