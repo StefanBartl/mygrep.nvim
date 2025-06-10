@@ -12,7 +12,7 @@
 
 - 🔍 Drop-in wrapper for `live_grep`, `multigrep`, or your custom pickers
 - 🧠 Remembers your previous queries in a session
--  Toggle favorites and  mark persistent queries
+-  Toggle favorites and mark persistent queries
 - 🔁 Reorder queries (⇧/⇩) inside history picker
 
 - 🔄 Navigate query memory via `<C-n>` and `<C-p>`
