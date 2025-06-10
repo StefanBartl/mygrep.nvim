@@ -6,16 +6,14 @@
 local M = {}
 
 -- Vim Utilies
-local safe_call = require("mygrep.utils.safe_call").safe_call
+-- ocal safe_call = require("mygrep.utils.safe_call").safe_call
 local notify = vim.notify
 local defer_fn = vim.defer_fn
-local schedule = vim.schedule
 -- Telescope dependencies
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 -- History Utilies
 local history = require("mygrep.core.history")
-
 local picker_state = require("mygrep.state.picker_state")
 
 ---@param bufnr integer
@@ -88,21 +86,40 @@ function M.attach_main_picker_mappings(bufnr, map, opts)
     local input = action_state.get_current_line()
     local sel = action_state.get_selected_entry()
 
+    -- Store to history
     history.add_history(opts.tool_state, input)
     actions.close(bufnr)
 
     vim.defer_fn(function()
       if sel and sel.filename and sel.lnum then
-        vim.cmd("edit " .. vim.fn.fnameescape(sel.filename))
+        -- Optional: check file existence first
+        if vim.fn.filereadable(sel.filename) == 0 then
+          notify("[mygrep] File not readable: " .. sel.filename, vim.log.levels.WARN)
+          return
+        end
+
+        -- Try to edit the file
+        local cmd = "edit " .. vim.fn.fnameescape(sel.filename)
+        local ok_edit = pcall(vim.api.nvim_command, cmd)
+        if not ok_edit then
+          notify("[mygrep] Failed to open file: " .. sel.filename, vim.log.levels.ERROR)
+          return
+        end
+
+        -- Move cursor to matched line/column
         local line = vim.fn.getline(sel.lnum)
         local regex = vim.fn.escape(input, [[\^$.*~[]])
-        local ok, col = pcall(vim.fn.match, line, regex)
-        vim.api.nvim_win_set_cursor(0, { sel.lnum, (ok and col >= 0) and col or 0 })
+        local result = require("mygrep.utils.safe_call").safe_call(vim.fn.match, line, regex)
+        local col = (result.ok and result.result >= 0) and result.result or 0
+
+        vim.api.nvim_win_set_cursor(0, { sel.lnum, col })
       else
+        -- No file to open → just run callback
         opts.callback(input)
       end
-    end, 50)
+    end, 100) -- increased delay for LSP cleanup
   end)
+
 end
 
 return M

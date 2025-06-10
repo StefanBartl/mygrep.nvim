@@ -5,7 +5,7 @@
 --- Users can override `M.options` during setup() if needed.
 local M = {}
 
----@type ConfigOptions
+---@type OptionsTable 
 M.options = {
   ---@type ToolPickerStyle
   tool_picker_style = "ui",
@@ -29,9 +29,10 @@ M.options = {
 ---@overload fun(key: "keymaps"): Keymaps
 ---Returns a configured option by key
 ---@param key ConfigOptions
----@return ToolName | Keymaps | Limit | nil
+---@return ToolPickerStyle | Limit | Keymaps | nil
 function M.get_option(key)
-  return M.options[key] or nil
+  return M.options[key]
 end
+
 
 return M
