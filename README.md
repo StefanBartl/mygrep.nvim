@@ -8,6 +8,23 @@
 
 ---
 
+- [Features](#features)
+- [Installation (lazy.nvim)](#installation-lazynvim)
+- [Default Keymaps](#default-keymaps)
+- [Usage](#usage)
+- [History & Favorites](#history--favorites)
+- [Persistent Storage](#persistent-storage)
+- [Root Directory Switching](#root-directory-switching)
+  - [Available options](#available-options)
+  - [How to use](#how-to-use)
+- [Adding Custom Tools](#adding-custom-tools)
+- [Built-in Tools](#built-in-tools)
+- [Help](#help)
+- [Status](#status)
+- [License](#license)
+
+---
+
 ## Features
 
 - 🔍 Drop-in wrapper for `live_grep`, `multigrep`, or your custom pickers
